@@ -8,9 +8,18 @@ use Getopt::Long;
 use DBI;
 
 # Global variables
+my %config = (
+	db => "$ENV{HOME}/.wocli/wocli_db.csv",
+	wow_dir => "$ENV{HOME}/.cxoffice/World\ of\ Warcraft\ FR/drive_c/Program\ Files/World\ of\ Warcraft/",
+	config_dir => "$ENV{HOME}/.wocli",
+	config_file => "config",
+	url_base => 'http://www.curse.com',
+	uri_home => '/addons/wow?page=1',
+	uri_category => '/addons/wow/category',
+);
 my $DEBUG=0;
 my $total_page=1;
-my $db = "curse_db.csv";
+my $db = "wocli_db.csv";
 my $addon_list_content="";
 my %addon_table = ();
 my %base_urls = (
@@ -23,7 +32,9 @@ my $dbi;
 
 # Options
 my $opt_build_cache=0;
-my $opt_wow_dir = "$ENV{HOME}/.cxoffice/World\ of\ Warcraft\ FR/drive_c/Program\ Files/World\ of\ Warcraft/";
+my $opt_wow_dir = $config{wow_dir};
+my $opt_extended_cache=0; # If set to 0 build quick cache, if set to 1 build full description cache.
+my $opt_write_config=0;
 
 # Methods
 
@@ -43,23 +54,24 @@ sub getAddonListContent {
 			$last_key=$1;
 			# Get addon version number
 			unless($last_key =~ /^category/){
-				my $response = $ua->get("$base_urls{base}/addons/wow/$last_key");
-				if ($response->is_success) {
-					if($DEBUG){
-						system("mkdir -p cache/debug/db/addon");
-						writeFile("cache/debug/db/addon/$last_key.html",$response->decoded_content);
-					}
-					if($response->decoded_content =~ /<li class="newest-file">Newest File: ([^<]+)<\/li>/){
-						$addon_table{$last_key}->{version}=$1;
+				if($opt_extended_cache){
+					my $response = $ua->get("$base_urls{base}/addons/wow/$last_key");
+					if ($response->is_success) {
+						if($DEBUG){
+							system("mkdir -p $config{config_dir}/cache/debug/db/addon");
+							writeFile("$config{config_dir}/cache/debug/db/addon/$last_key.html",$response->decoded_content) if($DEBUG);
+						}
+						if($response->decoded_content =~ /<li class="newest-file">Newest File: ([^<]+)<\/li>/){
+							$addon_table{$last_key}->{version}=$1;
+						}
+						else{
+							print "[error] unable to get version number for $last_key.\n";
+						}
 					}
 					else{
-						print "[error] unable to get version number for $last_key.\n";
+						die $response->status_line;
 					}
 				}
-				else{
-					die $response->status_line;
-				}
-			
 			}
 		}
 		elsif($tmp_line=~ /<li class="version version-up-to-date">Supports: ([\d\.]+)<\/li>/ ){
@@ -78,8 +90,10 @@ sub installAddon {
 				my $url = $3;
 				if($url=~ /^.*\/([^\/]+)$/){
 					my $file = $1;
-					print "\t[debug] got addon download URL: $url (dl to $file)\n";
-					$response = $ua->get($url,':content_file'=>"./cache/$file");
+					print "\t[debug] got addon download URL: $url (dl to $config{config_dir}/cache/$file)\n";
+					system("mkdir -p $config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
+					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
+					# TODO: Do the actual unziping implementation here.
 				}
 				else{
 					die "Can't extract file name from URL: $url\n";
@@ -106,7 +120,7 @@ sub writeFile{
 }
 
 sub writeCache{
-	open(my $fh,">:encoding(UTF-8)",$db) or die "Can't open $db for writing\n";
+	open(my $fh,">:encoding(UTF-8)",$config{db}) or die "Can't open $config{db} for writing\n";
 	foreach my $addon_shortname (keys(%addon_table)){
 		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{name};$addon_table{$addon_shortname}->{versionuptodate};$addon_table{$addon_shortname}->{version}\n";
 	}
@@ -114,7 +128,7 @@ sub writeCache{
 }
 
 sub loadCache {
-	open(my $fh,"<",$db) or die "Can't open $db for reading\n";
+	open(my $fh,"<",$config{db}) or die "Can't open $config{db} for reading\n";
 	while(my $line = <$fh>){
 		chomp($line);
 		my @split = split(/;/,$line);
@@ -139,7 +153,7 @@ sub loadCache {
 sub loadToc{
 	my $toc_file = shift(@_);
 	debug_print "Loading TOC file: $toc_file\n";
-	my %toc_table=(shortname=>"",deps=>[],optdeps=>[],version=>"0.0.0");
+	my %toc_table=(shortname=>"",deps=>[],optdeps=>[],version=>"0.0.0",ischild=>0);
 # 	opendir(my $dh, $opt_wow_dir) or die "Can't open directory $opt_wow_dir for reading\n";
 # 	my @tocs = grep { /^.*\.toc$/i } readdir($dh);
 # 	closedir $dh;
@@ -159,8 +173,8 @@ sub loadToc{
 # 		my $updateversion = "0.0.0";
 		
 		if($line=~/^\s*##\s*X-Curse-Project-ID:\s*([^\s]+)/i){
-			debug_print "(loadToc): found X-Curse-Project-ID\n";
 			$toc_table{shortname}=$1;
+			debug_print "(loadToc): found X-Curse-Project-ID => '$toc_table{shortname}'\n";
 		}
 		elsif( $line=~/^\s*##\s*X-Curse-Packaged-Version:\s*([^\s]+)/i ){
 			$toc_table{version}=$1;
@@ -170,6 +184,10 @@ sub loadToc{
 		}
 		elsif( $line=~/^\s*##\s*OptionalDeps:\s*([^\s]+)/i ){
 			$toc_table{optdeps}=split(/,\s*/,$1);
+		}
+		elsif($line=~/^\s*##\s*X-Child-Of:\s*([^\s]+)/i){
+			debug_print "(loadToc): $toc_file is a child of $1\n";
+			$toc_table{ischild}=1;
 		}
 		
 	}
@@ -182,23 +200,28 @@ sub loadToc{
 GetOptions(
   "build-cache"=>\$opt_build_cache,
   "wow-dir=s" => \$opt_wow_dir,
+  "save" => \$opt_write_config,
   "debug" => \$DEBUG
 );
+# TODO: write the function to save config, also add the cache cleaning features.
 
 debug_print "/!\\ DEBUG is enabled, it can generate a lot of output/!\\\n";
 debug_print "WoW directory: $opt_wow_dir\n";
 debug_print "Remaining args: ".join(',',@ARGV)."\n";
+debug_print "DB: $config{db}\n";
+
+mkdir $config{'config_dir'} unless (-e $config{'config_dir'});
 
 $ua = LWP::UserAgent->new(agent => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36');
 $ua->timeout(10);
 $ua->env_proxy;
 
-if( -e $db && !$opt_build_cache ){
+if( -e $config{db} && !$opt_build_cache ){
 	debug_print "Loading cache (no download)\n";
 	loadCache();
 }
 else{
-	debug_print "Downlaoding new cache\n";
+	debug_print "Downloading new cache\n";
 	my $response = $ua->get($base_urls{home});
 
 	if ($response->is_success) {
@@ -229,6 +252,8 @@ else{
 		die $response->status_line;
 	}
 }
+
+die "command required: install, update, remove, search, clear.\n" unless(defined($ARGV[0]));
 
 if($ARGV[0] eq 'install') {
 	installAddon($ARGV[1]);
