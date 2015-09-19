@@ -5,6 +5,7 @@ use warnings;
 use LWP::UserAgent;
 use Data::Dumper;
 use Getopt::Long;
+use File::Path qw(make_path remove_tree);
 use DBI;
 
 # Global variables
@@ -58,7 +59,8 @@ sub getAddonListContent {
 					my $response = $ua->get("$base_urls{base}/addons/wow/$last_key");
 					if ($response->is_success) {
 						if($DEBUG){
-							system("mkdir -p $config{config_dir}/cache/debug/db/addon");
+							# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
+							make_path("$config{config_dir}/cache/debug/db/addon");
 							writeFile("$config{config_dir}/cache/debug/db/addon/$last_key.html",$response->decoded_content) if($DEBUG);
 						}
 						if($response->decoded_content =~ /<li class="newest-file">Newest File: ([^<]+)<\/li>/){
@@ -91,7 +93,8 @@ sub installAddon {
 				if($url=~ /^.*\/([^\/]+)$/){
 					my $file = $1;
 					print "\t[debug] got addon download URL: $url (dl to $config{config_dir}/cache/$file)\n";
-					system("mkdir -p $config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
+					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
+					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
 					# TODO: Do the actual unziping implementation here.
 				}
@@ -228,7 +231,7 @@ else{
 	# 	print $response->decoded_content;  # or whatever
 		if($response->decoded_content =~ /<span class="pager-display">Page 1 of (\d+)<\/span>/){
 			$total_page=$1;
-	# 		print "Total pages: $total_page\n";
+			debug_print "Total pages: $total_page\n";
 			%addon_table = ();
 			print "[progress] 1/$total_page\n";
 			getAddonListContent($response->decoded_content);
@@ -268,6 +271,23 @@ elsif($ARGV[0] eq 'update'){
 			debug_print "Continue?";
 			<STDIN>;
 		}
+	}
+}
+elsif($ARGV[0] eq 'clean'){
+	remove_tree("$config{config_dir}/cache",{error => \my $err});
+	if (@$err) {
+	for my $diag (@$err) {
+		my ($file, $message) = %$diag;
+		if ($file eq '') {
+			print "general error: $message\n";
+		}
+		else {
+			print "problem unlinking $file: $message\n";
+		}
+	}
+	}
+	else {
+		print "Cache cleaned\n";
 	}
 }
 else{
