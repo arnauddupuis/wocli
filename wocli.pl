@@ -36,12 +36,13 @@ my $opt_build_cache=0;
 my $opt_wow_dir = $config{wow_dir};
 my $opt_extended_cache=0; # If set to 0 build quick cache, if set to 1 build full description cache.
 my $opt_write_config=0;
+my $opt_unzip="/usr/bin/unzip";
 
 # Methods
 
 # Print debug messages when debug is enabled
 sub debug_print {
-	return unless($DEBUG);
+	return unless $DEBUG;
 	print "[debug] ",@_;
 }
 
@@ -65,6 +66,13 @@ sub loadConfig {
 	}
 	close($fh);
 }
+
+
+sub unzip {
+	my ($file, $dest) = @_;
+	system("$opt_unzip $file -d $dest");
+}
+
 
 sub getAddonListContent {
 	my $raw_content = shift(@_);
@@ -113,11 +121,12 @@ sub installAddon {
 				my $url = $3;
 				if($url=~ /^.*\/([^\/]+)$/){
 					my $file = $1;
-					print "\t[debug] got addon download URL: $url (dl to $config{config_dir}/cache/$file)\n";
+					debug_print "\t[debug] got addon download URL: $url (dl to $config{config_dir}/cache/$file)\n";
 					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
 					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
 					# TODO: Do the actual unziping implementation here.
+					unzip("$config{config_dir}/cache/$file",$opt_wow_dir);
 				}
 				else{
 					die "Can't extract file name from URL: $url\n";
@@ -193,7 +202,7 @@ sub loadToc{
 # 		debug_print "(loadToc): '$line'\n";
 # 		my $shortname = "";
 # 		my $name = "";
-# 		my $version = "0.0.0";
+# 		my $version = "0.0.0";https://stormboard.com/
 # 		my $updateversion = "0.0.0";
 		
 		if($line=~/^\s*##\s*X-Curse-Project-ID:\s*([^\s]+)/i){
