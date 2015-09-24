@@ -70,7 +70,21 @@ sub loadConfig {
 
 sub unzip {
 	my ($file, $dest) = @_;
-	system("$opt_unzip $file -d $dest");
+	debug_print "2>&1 $opt_unzip $file -d $dest >> $config{config_dir}/unzip.log\n";
+	my $status = system("2>&1 $opt_unzip $file -d $dest >> $config{config_dir}/unzip.log");
+	if($status == 0){
+		return (1, "$file unzipped successfully.");
+	}
+	elsif ($? == -1) {
+		return (0,"failed to execute: $!");
+	}
+	elsif ($? & 127) {
+		return (0,"child died with signal %d, %s coredump"), ($? & 127),  ($? & 128) ? 'with' : 'without';
+	}
+	else {
+		return (0,"child exited with value %d"), $? >> 8;
+	}
+
 }
 
 
@@ -125,8 +139,14 @@ sub installAddon {
 					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
 					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
-					# TODO: Do the actual unziping implementation here.
-					unzip("$config{config_dir}/cache/$file",$opt_wow_dir);
+					my ($status,$msg) = ("$config{config_dir}/cache/$file",$opt_wow_dir);
+					# TODO: Return a status that helps.
+					if($status){
+						debug_print "$addon_shortname: [installed]\n";
+					}
+					else{
+						debug_print "$addon_shortname: [failed] ($msg)\n";
+					}
 				}
 				else{
 					die "Can't extract file name from URL: $url\n";
