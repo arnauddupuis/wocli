@@ -8,6 +8,9 @@ use Getopt::Long;
 use File::Path qw(make_path remove_tree);
 use DBI;
 
+# Setting autoflush to immediate flush.
+$|++;
+
 # Global variables
 my %config = (
 	db => "$ENV{HOME}/.wocli/wocli_db.csv",
@@ -71,7 +74,7 @@ sub loadConfig {
 sub unzip {
 	my ($file, $dest) = @_;
 	debug_print "2>&1 $opt_unzip $file -d $dest >> $config{config_dir}/unzip.log\n";
-	my $status = system("2>&1 $opt_unzip $file -d $dest >> $config{config_dir}/unzip.log");
+	my $status = system("2>&1 $opt_unzip -o $file -d $dest >> $config{config_dir}/unzip.log");
 	if($status == 0){
 		return (1, "$file unzipped successfully.");
 	}
@@ -139,13 +142,14 @@ sub installAddon {
 					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
 					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
-					my ($status,$msg) = ("$config{config_dir}/cache/$file",$opt_wow_dir);
-					# TODO: Return a status that helps.
+					my ($status,$msg) = unzip("$config{config_dir}/cache/$file",$opt_wow_dir);
 					if($status){
-						debug_print "$addon_shortname: [installed]\n";
+						debug_print "installAddon returning status: ok\n";
+						return (1, "install complete.");
 					}
 					else{
-						debug_print "$addon_shortname: [failed] ($msg)\n";
+						debug_print "installAddon returning status: NOT ok ($msg)\n";
+						return (0, "installation failed due to unzip issue: $msg.");
 					}
 				}
 				else{
@@ -233,10 +237,10 @@ sub loadToc{
 			$toc_table{version}=$1;
 		}
 		elsif( $line=~/^\s*##\s*Dependencies:\s*([^\s]+)/i ){
-			$toc_table{deps}=split(/,\s*/,$1);
+			$toc_table{deps}=[split(/,\s*/,$1)];
 		}
 		elsif( $line=~/^\s*##\s*OptionalDeps:\s*([^\s]+)/i ){
-			$toc_table{optdeps}=split(/,\s*/,$1);
+			$toc_table{optdeps}=[split(/,\s*/,$1)];
 		}
 		elsif($line=~/^\s*##\s*X-Child-Of:\s*([^\s]+)/i){
 			debug_print "(loadToc): $toc_file is a child of $1\n";
@@ -266,7 +270,6 @@ GetOptions(
   "save" => \$opt_write_config,
   "debug" => \$DEBUG
 );
-# TODO: write the function to save config, also add the cache cleaning features.
 
 debug_print "/!\\ DEBUG is enabled, it can generate a lot of output/!\\\n";
 debug_print "WoW directory: $opt_wow_dir\n";
@@ -320,22 +323,49 @@ else{
 
 die "command required: install, update, remove, search, clean.\n" unless(defined($ARGV[0]));
 
-if($ARGV[0] eq 'install') {
-	installAddon($ARGV[1]);
+my $cmd = shift(@ARGV);
+debug_print "COMMAND: $cmd\n";
+
+if($cmd eq 'install') {
+	foreach my $addonToInstall (@ARGV){
+		print "Install:\t$addonToInstall\t\t\t\t:\t";
+		my ($status,$msg) = installAddon($addonToInstall);
+		if($status){
+			print "installed.\n";
+		}
+		else{
+			print "installation failed ($msg).\n";
+		}
+	}
+	
 }
-elsif($ARGV[0] eq 'update'){
-	# Now we get to look for installed addons.
+elsif($cmd eq 'update'){
+	# Now we get to look for installed addons. There is a thing with update (see Titan pannel).
 	my @toc_files = split(/\n/,`find '$opt_wow_dir' -name "*.toc"`);
+	my @update_list = ();
 	foreach my $tf (@toc_files){
 		my %toc_data = loadToc($tf);
-		if($DEBUG){
-			print Data::Dumper::Dumper(%toc_data);
-			debug_print "Continue?";
-			<STDIN>;
+		if(defined($toc_data{'shortname'}) &&  exists($addon_table{$toc_data{'shortname'}})){
+			debug_print "UPDATE: $toc_data{'shortname'} IS AN ADDON FOUND IN THE DATABASE.\n";
+			push(@update_list, $toc_data{'shortname'});
+		}
+		else {
+			debug_print "update: $toc_data{'shortname'} is not a root addon provided by curse.\n";
+		}
+	}
+	print "Following addons are going to be updated:\n",join(', ',@update_list),"\n";
+	foreach my $addonToUpdate (@update_list){
+		print "Update:\t$addonToUpdate\t\t\t\t:\t";
+		my ($status,$msg) = installAddon($addonToUpdate);
+		if($status){
+			print "updated.\n";
+		}
+		else{
+			print "update failed ($msg).\n";
 		}
 	}
 }
-elsif($ARGV[0] eq 'clean'){
+elsif($cmd eq 'clean'){
 	remove_tree("$config{config_dir}/cache",{error => \my $err});
 	if (@$err) {
 	for my $diag (@$err) {
@@ -353,5 +383,5 @@ elsif($ARGV[0] eq 'clean'){
 	}
 }
 else{
-	die "Unknown command: $ARGV[0]\n";
+	die "Unknown command: $cmd\n";
 }
