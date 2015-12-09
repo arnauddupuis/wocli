@@ -6,11 +6,14 @@ use LWP::UserAgent;
 use Data::Dumper;
 use Getopt::Long;
 use File::Path qw(make_path remove_tree);
+use IO::Uncompress::Bunzip2 qw(bunzip2 $Bunzip2Error) ;
 use DBI;
 
 # Setting autoflush to immediate flush.
 $|++;
 
+# Got the DB URL!!!
+# It's at: http://clientupdate.curse.com/feed/Complete.xml.bz2
 # Global variables
 my %config = (
 	db => "$ENV{HOME}/.wocli/wocli_db.csv",
@@ -20,6 +23,7 @@ my %config = (
 	url_base => 'http://www.curse.com',
 	uri_home => '/addons/wow?page=1',
 	uri_category => '/addons/wow/category',
+	uri_complete_db => 'http://clientupdate.curse.com/feed/Complete.xml.bz2'
 );
 my $DEBUG=0;
 my $total_page=1;
@@ -40,6 +44,11 @@ my $opt_wow_dir = $config{wow_dir};
 my $opt_extended_cache=0; # If set to 0 build quick cache, if set to 1 build full description cache.
 my $opt_write_config=0;
 my $opt_unzip="/usr/bin/unzip";
+# These 2 options are used for sub-process detailled cache building
+my $opt_update_cache_page=0;
+my $opt_update_cache_standalone=0;
+my $opt_update_cache_max_processes=0; # not used right now
+my $opt_no_integrity_check=0; # This option prevent integrity checks (like trying to install an addon that isn't existing).
 
 # Methods
 
@@ -90,48 +99,9 @@ sub unzip {
 
 }
 
-
-sub getAddonListContent {
-	my $raw_content = shift(@_);
-	my $last_key="";
-	foreach my $tmp_line (split(/\n/,$raw_content)){
-		if($tmp_line =~ /<a href="\/addons\/wow\/([^"]+)">([^<]+)<\/a>/){
-# 			print "add: $2 (short: $1)\n";
-			$addon_table{"$1"} = {name=>"$2",versionuptodate=>"0.0.0",version=>"0.0.0"};
-			$last_key=$1;
-			# Get addon version number
-			unless($last_key =~ /^category/){
-				if($opt_extended_cache){
-					my $response = $ua->get("$base_urls{base}/addons/wow/$last_key");
-					if ($response->is_success) {
-						if($DEBUG){
-							# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
-							make_path("$config{config_dir}/cache/debug/db/addon");
-							writeFile("$config{config_dir}/cache/debug/db/addon/$last_key.html",$response->decoded_content) if($DEBUG);
-						}
-						if($response->decoded_content =~ /<li class="newest-file">Newest File: ([^<]+)<\/li>/){
-							$addon_table{$last_key}->{version}=$1;
-						}
-						else{
-							print "[error] unable to get version number for $last_key.\n";
-						}
-					}
-					else{
-						die $response->status_line;
-					}
-				}
-			}
-		}
-		elsif($tmp_line=~ /<li class="version version-up-to-date">Supports: ([\d\.]+)<\/li>/ ){
-			$addon_table{$last_key}->{versionuptodate}=$1;
-# 			print "add version $1 to $last_key\n";
-		}
-	}
-}
-
 sub installAddon {
 	my $addon_shortname = shift(@_);
-	if(exists($addon_table{$addon_shortname})){
+	if($opt_no_integrity_check || ($addon_table{$addon_shortname})){
 		my $response = $ua->get("$base_urls{base}/addons/wow/$addon_shortname/download");
 		if ($response->is_success) {
 			if($response->decoded_content =~ /<a data-project="(\d+)" data-file="(\d+)" data-href="([^"]+)" class="download-link" href="#">click here<\/a>/){
@@ -142,7 +112,7 @@ sub installAddon {
 					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
 					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
-					my ($status,$msg) = unzip("$config{config_dir}/cache/$file",$opt_wow_dir);
+					my ($status,$msg) = unzip("$config{config_dir}/cache/$file","$opt_wow_dir/Interface/AddOns/");
 					if($status){
 						debug_print "installAddon returning status: ok\n";
 						return (1, "install complete.");
@@ -177,7 +147,10 @@ sub writeFile{
 }
 
 sub writeCache{
-	open(my $fh,">:encoding(UTF-8)",$config{db}) or die "Can't open $config{db} for writing\n";
+	my $db_file = shift(@_);
+	$db_file = $config{db} unless(defined($db_file));
+	debug_print "writeCache: write in $db_file\n";
+	open(my $fh,">:encoding(UTF-8)",$db_file) or die "Can't open $db_file for writing\n";
 	foreach my $addon_shortname (keys(%addon_table)){
 		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{name};$addon_table{$addon_shortname}->{versionuptodate};$addon_table{$addon_shortname}->{version}\n";
 	}
@@ -253,6 +226,21 @@ sub loadToc{
 	return(%toc_table);
 }
 
+sub updateCache {
+	make_path("$config{config_dir}/cache/tmp/") unless( -d "$config{config_dir}/cache/tmp/");
+	# TODO: turn that to actual proper code...
+	system("rm -rf $config{config_dir}/cache/tmp/*");
+	my $response = $ua->get($config{uri_complete_db},':content_file'=>"$config{config_dir}/cache/tmp/Complete.xml.bz2");
+
+	if($response->is_success){
+		my $status = bunzip2 "$config{config_dir}/cache/tmp/Complete.xml.bz2" => "$config{config_dir}/cache/tmp/Complete.xml" or die "bunzip2 failed: $Bunzip2Error\n";
+		# TODO: Parse the XML...
+	}
+	else{
+		die "Error while downloading Curse.com database: ".$response->status_line."\n";
+	}
+}
+
 # Loading configuration 
 if( -e "$config{'config_dir'}/$config{'config_file'}" ){
 	debug_print "Loading config from $config{'config_dir'}/$config{'config_file'}\n";
@@ -266,8 +254,12 @@ else{
 # Getting options from command line.
 GetOptions(
   "build-cache"=>\$opt_build_cache,
+  "extended"=>\$opt_extended_cache,
+  "update-cache-page=i"=>\$opt_update_cache_page,
+  "update-cache-standalone"=>\$opt_update_cache_standalone,
   "wow-dir=s" => \$opt_wow_dir,
   "save" => \$opt_write_config,
+  "no-integrity-check" => \$opt_no_integrity_check,
   "debug" => \$DEBUG
 );
 
@@ -290,45 +282,19 @@ if( -e $config{db} && !$opt_build_cache ){
 }
 else{
 	debug_print "Downloading new cache\n";
-	my $response = $ua->get($base_urls{home});
-
-	if ($response->is_success) {
-	# 	print $response->decoded_content;  # or whatever
-		if($response->decoded_content =~ /<span class="pager-display">Page 1 of (\d+)<\/span>/){
-			$total_page=$1;
-			debug_print "Total pages: $total_page\n";
-			%addon_table = ();
-			print "[progress] 1/$total_page\n";
-			getAddonListContent($response->decoded_content);
-			for (my $k=2;$k<=$total_page;$k++){
-				print "[progress] $k/$total_page\n";
-				$response = $ua->get("$base_urls{base}/addons/wow?page=$k");
-				if ($response->is_success) {
-					getAddonListContent($response->decoded_content);
-				}
-				else{
-					print "[error] can't get page $k/$total_page\n";
-				}
-			}
-			writeCache();
-		}
-		else{
-			print "[error] unable to retrieve number of addons.\n";
-		}
-	}
-	else {
-		die $response->status_line;
-	}
+	updateCache();
 }
 
-die "command required: install, update, remove, search, clean.\n" unless(defined($ARGV[0]));
+die "command required: install, update, remove, search, clean, builddb, buildcache.\n" unless(defined($ARGV[0]));
 
 my $cmd = shift(@ARGV);
+debug_print "Self is: $^X $0\n";
 debug_print "COMMAND: $cmd\n";
 
 if($cmd eq 'install') {
 	foreach my $addonToInstall (@ARGV){
 		print "Install:\t$addonToInstall\t\t\t\t:\t";
+		# TODO install Dependencies!
 		my ($status,$msg) = installAddon($addonToInstall);
 		if($status){
 			print "installed.\n";
@@ -382,6 +348,12 @@ elsif($cmd eq 'clean'){
 		print "Cache cleaned\n";
 	}
 }
+elsif($cmd eq 'buildcache'){
+	debug_print "Building new cache\n";
+	updateCache();
+}
 else{
 	die "Unknown command: $cmd\n";
 }
+
+exit(0);
