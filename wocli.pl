@@ -82,8 +82,8 @@ sub loadConfig {
 
 sub unzip {
 	my ($file, $dest) = @_;
-	debug_print "2>&1 $opt_unzip $file -d $dest >> $config{config_dir}/unzip.log\n";
-	my $status = system("2>&1 $opt_unzip -o $file -d $dest >> $config{config_dir}/unzip.log");
+	debug_print "2>&1 $opt_unzip '$file' -d '$dest' >> $config{config_dir}/unzip.log\n";
+	my $status = system("2>&1 $opt_unzip -o '$file' -d '$dest' >> '$config{config_dir}/unzip.log'");
 	if($status == 0){
 		return (1, "$file unzipped successfully.");
 	}
