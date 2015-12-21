@@ -40,10 +40,9 @@ my $dbi;
 
 # Options
 my $opt_build_cache=0;
-my $opt_wow_dir = $config{wow_dir};
+my $opt_wow_dir = "";
 my $opt_extended_cache=0; # If set to 0 build quick cache, if set to 1 build full description cache.
 my $opt_write_config=0;
-my $opt_unzip="/usr/bin/unzip";
 # These 2 options are used for sub-process detailled cache building
 my $opt_update_cache_page=0;
 my $opt_update_cache_standalone=0;
@@ -77,26 +76,6 @@ sub loadConfig {
 		}
 	}
 	close($fh);
-}
-
-
-sub unzip {
-	my ($file, $dest) = @_;
-	debug_print "2>&1 $opt_unzip '$file' -d '$dest' >> $config{config_dir}/unzip.log\n";
-	my $status = system("2>&1 $opt_unzip -o '$file' -d '$dest' >> '$config{config_dir}/unzip.log'");
-	if($status == 0){
-		return (1, "$file unzipped successfully.");
-	}
-	elsif ($? == -1) {
-		return (0,"failed to execute: $!");
-	}
-	elsif ($? & 127) {
-		return (0,"child died with signal %d, %s coredump"), ($? & 127),  ($? & 128) ? 'with' : 'without';
-	}
-	else {
-		return (0,"child exited with value %d"), $? >> 8;
-	}
-
 }
 
 sub installAddon {
@@ -241,15 +220,7 @@ sub updateCache {
 	}
 }
 
-# Loading configuration 
-if( -e "$config{'config_dir'}/$config{'config_file'}" ){
-	debug_print "Loading config from $config{'config_dir'}/$config{'config_file'}\n";
-	loadConfig();
-	$opt_wow_dir = $config{wow_dir};
-}
-else{
-	debug_print "File $config{'config_dir'}/$config{'config_file'} does not exists, going on with default values.\n";
-}
+
 
 # Getting options from command line.
 GetOptions(
@@ -262,6 +233,17 @@ GetOptions(
   "no-integrity-check" => \$opt_no_integrity_check,
   "debug" => \$DEBUG
 );
+
+# Loading configuration 
+if( -e "$config{'config_dir'}/$config{'config_file'}" ){
+	debug_print "Loading config from $config{'config_dir'}/$config{'config_file'}\n";
+	loadConfig();
+	$opt_wow_dir = $config{wow_dir} if($opt_wow_dir eq "");
+}
+else{
+	debug_print "File $config{'config_dir'}/$config{'config_file'} does not exists, going on with default values.\n";
+}
+
 
 debug_print "/!\\ DEBUG is enabled, it can generate a lot of output/!\\\n";
 debug_print "WoW directory: $opt_wow_dir\n";

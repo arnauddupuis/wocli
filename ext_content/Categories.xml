@@ -19,7 +19,7 @@
 <_x003C_Id_x003E_k__BackingField>1</_x003C_Id_x003E_k__BackingField>
 <_x003C_Name_x003E_k__BackingField>Chat &amp; Communication</_x003C_Name_x003E_k__BackingField>
 <_x003C_ParentId_x003E_k__BackingField i:nil="true"/>
-<_x003C_Slug_x003E_k__BackingField>chat-communication</_x003C_Slug_x003E_k__BackingField>
+<_x003C_Slug_x003E_k__BackingField>dchat-communication</_x003C_Slug_x003E_k__BackingField>
 </CCategory>
 <CCategory>
 <_x003C_GameIDs_x003E_k__BackingField xmlns:a="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
