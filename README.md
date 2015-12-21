@@ -28,6 +28,7 @@ The following Perl modules are used, they should be part of the Perl distributio
 * Getopt::Long
 * File::Path 
 * Time::HiRes
+* XML::Simple
 
 ### Run
 
