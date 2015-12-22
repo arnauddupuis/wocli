@@ -46,6 +46,7 @@ my $opt_extended_cache=0; # If set to 0 build quick cache, if set to 1 build ful
 my $opt_write_config=0;
 # These 2 options are used for sub-process detailled cache building
 my $opt_update_cache_page=0;
+my $opt_unzip='/usr/bin/unzip';
 my $opt_update_cache_standalone=0;
 my $opt_update_cache_max_processes=0; # not used right now
 my $opt_no_integrity_check=0; # This option prevent integrity checks (like trying to install an addon that isn't existing).
@@ -77,6 +78,25 @@ sub loadConfig {
 		}
 	}
 	close($fh);
+}
+
+sub unzip {
+	my ($file, $dest) = @_;
+	debug_print "2>&1 $opt_unzip '$file' -d '$dest' >> $config{config_dir}/unzip.log\n";
+	my $status = system("2>&1 $opt_unzip -o '$file' -d '$dest' >> '$config{config_dir}/unzip.log'");
+	if($status == 0){
+		return (1, "$file unzipped successfully.");
+	}
+	elsif ($? == -1) {
+		return (0,"failed to execute: $!");
+	}
+	elsif ($? & 127) {
+		return (0,"child died with signal %d, %s coredump"), ($? & 127),  ($? & 128) ? 'with' : 'without';
+	}
+	else {
+		return (0,"child exited with value %d"), $? >> 8;
+	}
+
 }
 
 sub installAddon {
