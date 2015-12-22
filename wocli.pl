@@ -40,7 +40,7 @@ my $ua;
 my $dbi;
 
 # Options
-my $opt_build_cache=1;
+my $opt_build_cache=0;
 my $opt_wow_dir = "";
 my $opt_extended_cache=0; # If set to 0 build quick cache, if set to 1 build full description cache.
 my $opt_write_config=0;
