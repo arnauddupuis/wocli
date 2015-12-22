@@ -123,19 +123,19 @@ sub installAddon {
 					}
 				}
 				else{
-					die "Can't extract file name from URL: $url\n";
+					return(0,"Can't extract file name from URL: $url");
 				}
 			}
 			else{
-				print "[error] couldn't extract download URL.\n";
+				return(0, "Couldn't extract download URL.");
 			}
 		}
 		else{
-			die $response->status_line;
+			return(0,$response->status_line);
 		}
 	}
 	else{
-		print "[error] $addon_shortname is not a valid (existing) addon short name.\n";
+		return(0,"$addon_shortname is not a valid (existing) addon short name.");
 	}
 }
 
@@ -152,7 +152,7 @@ sub writeCache{
 	debug_print "writeCache: write in $db_file\n";
 	open(my $fh,">:encoding(UTF-8)",$db_file) or die "Can't open $db_file for writing\n";
 	foreach my $addon_shortname (keys(%addon_table)){
-		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary}\n";
+		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Id};$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary}\n";
 	}
 	close($fh);
 }
@@ -163,19 +163,13 @@ sub loadCache {
 		chomp($line);
 		my @split = split(/;/,$line);
 		my $shortname = $split[0];
-		my $name = "";
-		my $version = $split[$#split];
-		my $updateversion = $split[$#split-1];
-		if($#split>3){
-			$split[0]="";
-			$split[$#split-1]="";
-			$split[$#split]="";
-			$name = join('',@split);
+		if(scalar(@split) == 6 ){
+			$addon_table{$shortname} = {Id => $split[1], Name => $split[2], DownloadUrl => $split[3], Version => $split[4], Summary => "$split[5]"};
 		}
 		else{
-			$name = $split[1];
+			debug_print "Not enought field for: $shortname (".scalar(@split)."/6)\n";
+			$addon_table{$shortname} = {Id => -1, Name => "$shortname", DownloadUrl => "", Version => "0.0.0", Summary => ""};
 		}
-		$addon_table{$shortname} = {name=>"$name",versionuptodate=>"$updateversion",version=>"$version"};
 	}
 	close($fh);
 }
@@ -247,8 +241,9 @@ sub updateCache {
 		foreach my $caddon (@{$complete->{'CAddOn'}}){
 			if($caddon->{'CategorySection'}->{'GameID'} == 1){
 				$wac++;
+				$caddon->{'Summary'} =~ s/;/,/g;
 				my @url = split(/\//,$caddon->{'WebSiteURL'});
-				$addon_table{$url[$#url]} = { Name => $caddon->{'Name'}, DownloadUrl => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'DownloadURL'}, Summary => "$caddon->{'Summary'}", Version => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'FileName'} };
+				$addon_table{$url[$#url]} = { Id => $caddon->{'Id'}, Name => $caddon->{'Name'}, DownloadUrl => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'DownloadURL'}, Version => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'FileName'}, Summary => "$caddon->{'Summary'}" };
 			}
 			$tac++;
 		}
