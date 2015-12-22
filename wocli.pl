@@ -7,6 +7,7 @@ use Data::Dumper;
 use Getopt::Long;
 use File::Path qw(make_path remove_tree);
 use IO::Uncompress::Bunzip2 qw(bunzip2 $Bunzip2Error) ;
+use XML::Simple qw(:strict);
 use DBI;
 
 # Setting autoflush to immediate flush.
@@ -208,16 +209,29 @@ sub loadToc{
 sub updateCache {
 	make_path("$config{config_dir}/cache/tmp/") unless( -d "$config{config_dir}/cache/tmp/");
 	# TODO: turn that to actual proper code...
+	debug_print "Downloading new cache\n";
 	system("rm -rf $config{config_dir}/cache/tmp/*");
 	my $response = $ua->get($config{uri_complete_db},':content_file'=>"$config{config_dir}/cache/tmp/Complete.xml.bz2");
 
 	if($response->is_success){
+		debug_print "Unziping database\n";
 		my $status = bunzip2 "$config{config_dir}/cache/tmp/Complete.xml.bz2" => "$config{config_dir}/cache/tmp/Complete.xml" or die "bunzip2 failed: $Bunzip2Error\n";
 		# TODO: Parse the XML...
+		my $complete = XMLin("$config{config_dir}/cache/tmp/Complete.xml", KeyAttr => {}, ForceArray => [ 'CAddOnCategory', 'Dependencies', 'CAddOnFileDependency', 'Modules', 'CAddOnModule', 'a:string' ]);
+		my $wac = 0;
+		my $tac = 0;
+		foreach my $caddon (@{$complete->{'CAddOn'}}){
+			if($caddon->{'CategorySection'}->{'GameID'} == 1){
+				$wac++;
+			}
+			$tac++;
+		}
+		debug_print "WoW addons found in Complete.xml: $wac\nTotal addons found in Complete.xml: $tac\n";
 	}
 	else{
 		die "Error while downloading Curse.com database: ".$response->status_line."\n";
 	}
+	
 }
 
 

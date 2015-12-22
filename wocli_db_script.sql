@@ -4,6 +4,9 @@ create database wocli ;
 drop table Authors;
 drop table Addon;
 drop table AddonAuthors;
+drop table Categories;
+drop table CategoriesImages;
+drop table AddonCategories;
 
 create table Authors (
 	id int not null,
@@ -12,7 +15,7 @@ create table Authors (
 	primary key(id)
 );
 
-create table Addon (
+create table Addons (
 	id int not null,
 	
 	primary key (id)
@@ -26,11 +29,17 @@ create table AddonAuthors (
 	foreign key ( author_id ) references id ( Authors ) on delete cascade
 );
 
-create table Category (
+create table Categories (
 	id int not null,
 	name varchar(250) not null,
 	url varchar(250),
 	primary key(id)
+);
+
+create table CategoriesImages (
+	id int not null,
+	img varchar(100) not null,
+	primary key (id)
 );
 
 create table AddonCategories (
