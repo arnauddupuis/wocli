@@ -18,7 +18,7 @@ $|++;
 # Global variables
 my %config = (
 	db => "$ENV{HOME}/.wocli/cache/wocli_db.csv",
-	wow_dir => "$ENV{HOME}/.cxoffice/World\ of\ Warcraft\ FR/drive_c/Program\ Files/World\ of\ Warcraft/",
+	wow_dir => "",
 	config_dir => "$ENV{HOME}/.wocli",
 	config_file => "config",
 	url_base => 'http://www.curse.com',
@@ -69,12 +69,12 @@ sub loadConfig {
 	while(my $line = <$fh>){
 		chomp($line);
 		next if($line =~ /^\s*#/);
-		if($line =~ /^\s*([^=]+)\s*=\s*([^\s]+)\s*$/){
+		if($line =~ /^\s*([^=]+)\s*=\s*(.+)\s*$/){
 			debug_print "config defines '$1' with value '$2'\n";
 			$config{$1}=$2;
 		}
 		else{
-			debug_print "Line '$line' is neither a comment nor a valid config line !\n";
+			print "[warning] '$line' is neither a comment nor a valid config line !\n";
 		}
 	}
 	close($fh);
