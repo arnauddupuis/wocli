@@ -17,7 +17,7 @@ $|++;
 # It's at: http://clientupdate.curse.com/feed/Complete.xml.bz2
 # Global variables
 my %config = (
-	db => "$ENV{HOME}/.wocli/wocli_db.csv",
+	db => "$ENV{HOME}/.wocli/cache/wocli_db.csv",
 	wow_dir => "$ENV{HOME}/.cxoffice/World\ of\ Warcraft\ FR/drive_c/Program\ Files/World\ of\ Warcraft/",
 	config_dir => "$ENV{HOME}/.wocli",
 	config_file => "config",
@@ -40,7 +40,7 @@ my $ua;
 my $dbi;
 
 # Options
-my $opt_build_cache=0;
+my $opt_build_cache=1;
 my $opt_wow_dir = "";
 my $opt_extended_cache=0; # If set to 0 build quick cache, if set to 1 build full description cache.
 my $opt_write_config=0;
@@ -132,7 +132,7 @@ sub writeCache{
 	debug_print "writeCache: write in $db_file\n";
 	open(my $fh,">:encoding(UTF-8)",$db_file) or die "Can't open $db_file for writing\n";
 	foreach my $addon_shortname (keys(%addon_table)){
-		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{name};$addon_table{$addon_shortname}->{versionuptodate};$addon_table{$addon_shortname}->{version}\n";
+		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary}\n";
 	}
 	close($fh);
 }
@@ -210,25 +210,35 @@ sub updateCache {
 	make_path("$config{config_dir}/cache/tmp/") unless( -d "$config{config_dir}/cache/tmp/");
 	# TODO: turn that to actual proper code...
 	debug_print "Downloading new cache\n";
+	print "Downloading cache...";
 	system("rm -rf $config{config_dir}/cache/tmp/*");
 	my $response = $ua->get($config{uri_complete_db},':content_file'=>"$config{config_dir}/cache/tmp/Complete.xml.bz2");
 
 	if($response->is_success){
+		print "ok\n";
 		debug_print "Unziping database\n";
+		print "Unzipping database...";
 		my $status = bunzip2 "$config{config_dir}/cache/tmp/Complete.xml.bz2" => "$config{config_dir}/cache/tmp/Complete.xml" or die "bunzip2 failed: $Bunzip2Error\n";
+		print "ok\n";
 		# TODO: Parse the XML...
-		my $complete = XMLin("$config{config_dir}/cache/tmp/Complete.xml", KeyAttr => {}, ForceArray => [ 'CAddOnCategory', 'Dependencies', 'CAddOnFileDependency', 'Modules', 'CAddOnModule', 'a:string' ]);
+		my $complete = XMLin("$config{config_dir}/cache/tmp/Complete.xml", KeyAttr => {}, ForceArray => [ 'CAddOnCategory', 'Dependencies', 'CAddOnFileDependency', 'Modules', 'CAddOnModule', 'a:string', 'CAddOnAuthor', 'CAddOnFile' ]);
 		my $wac = 0;
 		my $tac = 0;
 		foreach my $caddon (@{$complete->{'CAddOn'}}){
 			if($caddon->{'CategorySection'}->{'GameID'} == 1){
 				$wac++;
+				my @url = split(/\//,$caddon->{'WebSiteURL'});
+				$addon_table{$url[$#url]} = { Name => $caddon->{'Name'}, DownloadUrl => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'DownloadURL'}, Summary => "$caddon->{'Summary'}", Version => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'FileName'} };
 			}
 			$tac++;
 		}
-		debug_print "WoW addons found in Complete.xml: $wac\nTotal addons found in Complete.xml: $tac\n";
+		debug_print Data::Dumper::Dumper(%addon_table),"\n";
+		debug_print "WoW addons found (WoW/Total): $wac/$tac\n";
+		print "Cache updated with $wac addons.\n";
+		writeCache();
 	}
 	else{
+		print "not ok.\n";
 		die "Error while downloading Curse.com database: ".$response->status_line."\n";
 	}
 	
@@ -265,6 +275,7 @@ debug_print "Remaining args: ".join(',',@ARGV)."\n";
 debug_print "DB: $config{db}\n";
 
 mkdir $config{'config_dir'} unless (-e $config{'config_dir'});
+mkdir "$config{'config_dir'}/cache" unless (-e "$config{'config_dir'}/cache");
 
 saveConfig() if($opt_write_config);
 
