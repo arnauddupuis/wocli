@@ -103,15 +103,13 @@ sub unzip {
 sub installAddon {
 	my $addon_shortname = shift(@_);
 	if($opt_no_integrity_check || ($addon_table{$addon_shortname})){
-		my $response = $ua->get("$base_urls{base}/addons/wow/$addon_shortname/download");
-		if ($response->is_success) {
-			if($response->decoded_content =~ /<a data-project="(\d+)" data-file="(\d+)" data-href="([^"]+)" class="download-link" href="#">click here<\/a>/){
-				my $url = $3;
+		my $response;
+		if($opt_no_integrity_check || ($addon_table{$addon_shortname})){
+			if($addon_table{$addon_shortname}->{DownloadUrl}){
+				my $url = $addon_table{$addon_shortname}->{DownloadUrl};
 				if($url=~ /^.*\/([^\/]+)$/){
 					my $file = $1;
-					# TODO: Use our DownloadUrl parameter instead of parsing Curse.com
 					debug_print "\tgot addon download URL: $url (dl to $config{config_dir}/cache/$file)\n";
-					debug_print "\tgot addon download URL from cache: $addon_table{$addon_shortname}->{DownloadUrl}.\n";
 					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
 					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
@@ -133,9 +131,6 @@ sub installAddon {
 			else{
 				return(0, "Couldn't extract download URL.");
 			}
-		}
-		else{
-			return(0,$response->status_line);
 		}
 	}
 	else{
@@ -375,7 +370,6 @@ elsif($cmd eq 'add'){
 	writeInstalledCache();
 }
 elsif($cmd eq 'update'){
-	# TODO: Only update addons that requires an update...
 	debug_print "ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc\n";
 	my @toc_files = split(/\n/,`ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc`);
 	my @update_list = ();
