@@ -18,6 +18,7 @@ $|++;
 # Global variables
 my %config = (
 	db => "$ENV{HOME}/.wocli/cache/wocli_db.csv",
+	installed_db => "$ENV{HOME}/.wocli/wocli_installed_db.csv",
 	wow_dir => "",
 	config_dir => "$ENV{HOME}/.wocli",
 	config_file => "config",
@@ -31,6 +32,7 @@ my $total_page=1;
 my $db = "wocli_db.csv";
 my $addon_list_content="";
 my %addon_table = ();
+my %installed_addon_table = ();
 my %base_urls = (
 	base => 'http://www.curse.com',
 	home => 'http://www.curse.com/addons/wow?page=1',
@@ -107,12 +109,15 @@ sub installAddon {
 				my $url = $3;
 				if($url=~ /^.*\/([^\/]+)$/){
 					my $file = $1;
-					debug_print "\t[debug] got addon download URL: $url (dl to $config{config_dir}/cache/$file)\n";
+					# TODO: Use our DownloadUrl parameter instead of parsing Curse.com
+					debug_print "\tgot addon download URL: $url (dl to $config{config_dir}/cache/$file)\n";
+					debug_print "\tgot addon download URL from cache: $addon_table{$addon_shortname}->{DownloadUrl}.\n";
 					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
 					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
 					my ($status,$msg) = unzip("$config{config_dir}/cache/$file","$opt_wow_dir/Interface/AddOns/");
 					if($status){
+						$installed_addon_table{$addon_shortname} = $addon_table{$addon_shortname};
 						debug_print "installAddon returning status: ok\n";
 						return (1, "install complete.");
 					}
@@ -168,6 +173,34 @@ sub loadCache {
 		else{
 			debug_print "Not enought field for: $shortname (".scalar(@split)."/6)\n";
 			$addon_table{$shortname} = {Id => -1, Name => "$shortname", DownloadUrl => "", Version => "0.0.0", Summary => ""};
+		}
+	}
+	close($fh);
+}
+
+sub writeInstalledCache{
+	my $db_file = shift(@_);
+	$db_file = $config{installed_db} unless(defined($db_file));
+	debug_print "writeCache: write in $db_file\n";
+	open(my $fh,">:encoding(UTF-8)",$db_file) or die "Can't open $db_file for writing\n";
+	foreach my $addon_shortname (keys(%installed_addon_table)){
+		print $fh "$addon_shortname;$installed_addon_table{$addon_shortname}->{Id};$installed_addon_table{$addon_shortname}->{Name};$installed_addon_table{$addon_shortname}->{DownloadUrl};$installed_addon_table{$addon_shortname}->{Version};$installed_addon_table{$addon_shortname}->{Summary}\n";
+	}
+	close($fh);
+}
+
+sub loadInstalledCache {
+	open(my $fh,"<",$config{installed_db}) or die "Can't open $config{installed_db} for reading\n";
+	while(my $line = <$fh>){
+		chomp($line);
+		my @split = split(/;/,$line);
+		my $shortname = $split[0];
+		if(scalar(@split) == 6 ){
+			$installed_addon_table{$shortname} = {Id => $split[1], Name => $split[2], DownloadUrl => $split[3], Version => $split[4], Summary => "$split[5]"};
+		}
+		else{
+			debug_print "Not enought field for: $shortname (".scalar(@split)."/6)\n";
+			$installed_addon_table{$shortname} = {Id => -1, Name => "$shortname", DownloadUrl => "", Version => "0.0.0", Summary => ""};
 		}
 	}
 	close($fh);
@@ -293,6 +326,8 @@ mkdir "$config{'config_dir'}/cache" unless (-e "$config{'config_dir'}/cache");
 
 saveConfig() if($opt_write_config);
 
+loadInstalledCache() if( -e $config{installed_db} );
+
 $ua = LWP::UserAgent->new(agent => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36');
 $ua->timeout(10);
 $ua->env_proxy;
@@ -318,39 +353,60 @@ if($cmd eq 'install') {
 		# TODO install Dependencies!
 		my ($status,$msg) = installAddon($addonToInstall);
 		if($status){
-			print "installed.\n";
+			print BOLD,GREEN,"installed",RESET," ($installed_addon_table{$addonToInstall}->{Name} $installed_addon_table{$addonToInstall}->{Version}).\n";
 		}
 		else{
-			print "installation failed ($msg).\n";
+			print BOLD,RED,"installation failed ($msg).\n",RESET;
 		}
 	}
-	
+	writeInstalledCache();
+}
+elsif($cmd eq 'add'){
+	foreach my $addonToAdd (@ARGV){
+		print "Adding:\t$addonToAdd"." "x(50- length($addonToAdd)).":\t";
+		if($addon_table{$addonToAdd}){
+			$installed_addon_table{$addonToAdd} = $addon_table{$addonToAdd};
+			print BOLD,GREEN,"added",RESET," ($installed_addon_table{$addonToAdd}->{Name} $installed_addon_table{$addonToAdd}->{Version}).\n";
+		}
+		else{
+			print BOLD,RED,"addition failed (addon is not in the database).\n",RESET;
+		}
+	}
+	writeInstalledCache();
 }
 elsif($cmd eq 'update'){
 	# Now we get to look for installed addons. There is a thing with update (see Titan pannel).
-	my @toc_files = split(/\n/,`find '$opt_wow_dir' -name "*.toc"`);
+	debug_print "ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc\n";
+	my @toc_files = split(/\n/,`ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc`);
 	my @update_list = ();
+	my %updatable = %installed_addon_table;
 	foreach my $tf (@toc_files){
 		my %toc_data = loadToc($tf);
 		if(defined($toc_data{'shortname'}) &&  exists($addon_table{$toc_data{'shortname'}})){
 			debug_print "UPDATE: $toc_data{'shortname'} IS AN ADDON FOUND IN THE DATABASE.\n";
 			push(@update_list, $toc_data{'shortname'});
+			$updatable{$toc_data{'shortname'}} = 1;
 		}
 		else {
 			debug_print "update: $toc_data{'shortname'} is not a root addon provided by curse.\n";
 		}
 	}
-	print "Following addons are going to be updated:\n",join(', ',@update_list),"\n";
+	@update_list = keys(%updatable);
+	print "Following addons are going to be updated:\n",join(', ',@update_list),"\nIs that ok? (y/n):";
+	my $answer = <STDIN>;
+	chomp($answer);
+	exit if($answer=~ /^n/i);
 	foreach my $addonToUpdate (@update_list){
 		print "Update:\t$addonToUpdate\t\t\t\t:\t";
 		my ($status,$msg) = installAddon($addonToUpdate);
 		if($status){
-			print "updated.\n";
+			print BOLD,GREEN,"updated",RESET," ($installed_addon_table{$addonToUpdate}->{Name} $installed_addon_table{$addonToUpdate}->{Version}).\n";
 		}
 		else{
-			print "update failed ($msg).\n";
+			print BOLD,RED,"update failed ($msg).\n",RESET;
 		}
 	}
+	writeInstalledCache();
 }
 elsif($cmd eq 'clean'){
 	remove_tree("$config{config_dir}/cache",{error => \my $err});
@@ -358,15 +414,15 @@ elsif($cmd eq 'clean'){
 	for my $diag (@$err) {
 		my ($file, $message) = %$diag;
 		if ($file eq '') {
-			print "general error: $message\n";
+			print BOLD,RED,"general error: $message\n",RESET;
 		}
 		else {
-			print "problem unlinking $file: $message\n";
+			print BOLD,RED,"problem unlinking $file: $message\n",RESET;
 		}
 	}
 	}
 	else {
-		print "Cache cleaned\n";
+		print BOLD, GREEN,"Cache cleaned\n",RESET;
 	}
 }
 elsif($cmd eq 'buildcache'){
