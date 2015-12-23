@@ -36,6 +36,35 @@ The following Perl modules are used, they should be part of the Perl distributio
 * XML::Simple
 * Term::ANSIColor
 
+### Quick first run
+
+First, tell wocli where your Wordl of Warcraft install is (and build the cache at the same time):
+```bash
+wocli.pl --wow-dir /your/path/to\ your/wow\ install --save buildcache
+```
+
+Then you shoudl be able to install/update/add/search easily:
+```bash
+wocli.pl install bagnon titan-panel gatherer
+```
+
+Please note that for install we need what we call "shortnames", wich is the X-Curse-Project-ID. When you search for an addon, the shortname is displayed first in green in the results list.
+```bash
+[adupuis@localhost wocli] $ ./wocli.pl search gath
+gathernow: Give logical progression of Mining, Herbalism & Skinning. Will not be updated with WoD zones
+gathermate2: Collects Herbs, Mines, Gas Clouds, Archaeology, Treasure and Fishing locations and adds them to the worldmap and minimap
+titan-gathered: This simple WoW addon track all useful tradeitems and materials in your bag and show result in Titan Bar. Over right click is...
+gathermate2_data-carbonite: GatherMate2 Data - Carbonite Edition
+ygather: English yGather - Gatherers Map is a resource stack mapper. It records resource stack locations as you walk by and shows them...
+gatherer: Helps track the closest plants, deposits and treasure locations on your minimap.
+gathermate2_data: Wowhead Data dump for GatherMate2
+gathertip: Show useful Tooltip for gather information!
+gathermate_sharing: Database sharing module for GatherMate2
+
+Found 9 partial name results.
+
+```
+
 ### Run
 
 Here is a list of the commands and options you can use.
