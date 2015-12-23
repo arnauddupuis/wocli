@@ -2,7 +2,7 @@
 
 ## Intro
 
-A toolset to get an update World of Warcraft addons from Curse.com (main target is Linux but you never know, it can work on other OS).
+A small tool to install or update World of Warcraft addons from Curse.com (main target is Linux but you never know, it can work on other OS). Unlike other implementation it doesn't relly on parsing Curse.com website and is way faster than other programs.
 
 The goal is to provide a command line tool as well as a nice UI.
 
