@@ -58,10 +58,14 @@ Install addons, takes a list of addons shortnames in parameters. It's going to i
 Update your installed addons to the latest version. This finds your previously installed addons , as long as their .toc file contains a X-Curse-Project-ID tag.
 Otherwise it's too risky to do anything automatically.
 If you want your addon to be added to the tracked list of addon you can either re-install it with wocli (so it's the latest version available):
+```bash
 wocli.pl install <your addon list>
+```
 
 Or you can use the add command:
+```bash
 wocli.pl add <your addon list>
+```
 
 PLEASE REFER TO THE DOCUMENTATION FOR BOTH OF THESE COMMANDS.
 
