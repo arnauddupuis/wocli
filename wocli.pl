@@ -375,7 +375,7 @@ elsif($cmd eq 'add'){
 	writeInstalledCache();
 }
 elsif($cmd eq 'update'){
-	# Now we get to look for installed addons. There is a thing with update (see Titan pannel).
+	# TODO: Only update addons that requires an update...
 	debug_print "ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc\n";
 	my @toc_files = split(/\n/,`ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc`);
 	my @update_list = ();
@@ -384,29 +384,48 @@ elsif($cmd eq 'update'){
 		my %toc_data = loadToc($tf);
 		if(defined($toc_data{'shortname'}) &&  exists($addon_table{$toc_data{'shortname'}})){
 			debug_print "UPDATE: $toc_data{'shortname'} IS AN ADDON FOUND IN THE DATABASE.\n";
-			push(@update_list, $toc_data{'shortname'});
+# 			push(@update_list, $toc_data{'shortname'});
 			$updatable{$toc_data{'shortname'}} = 1;
 		}
 		else {
 			debug_print "update: $toc_data{'shortname'} is not a root addon provided by curse.\n";
 		}
 	}
-	@update_list = keys(%updatable);
-	print "Following addons are going to be updated:\n",join(', ',@update_list),"\nIs that ok? (y/n):";
-	my $answer = <STDIN>;
-	chomp($answer);
-	exit if($answer=~ /^n/i);
-	foreach my $addonToUpdate (@update_list){
-		print "Update:\t$addonToUpdate\t\t\t\t:\t";
-		my ($status,$msg) = installAddon($addonToUpdate);
-		if($status){
-			print BOLD,GREEN,"updated",RESET," ($installed_addon_table{$addonToUpdate}->{Name} $installed_addon_table{$addonToUpdate}->{Version}).\n";
+	foreach my $key (keys(%updatable)){
+		if(defined($installed_addon_table{$key})){
+			if($addon_table{$key}->{Version} gt $installed_addon_table{$key}->{Version}){
+				push(@update_list,$key);
+				debug_print "addon: $key added to update queue.\n";
+			}
+			else{
+				debug_print "addon: $key is already up to date.\n";
+			}
 		}
 		else{
-			print BOLD,RED,"update failed ($msg).\n",RESET;
+			push(@update_list,$key);
+			debug_print "addon: $key added to update queue.\n";
 		}
 	}
-	writeInstalledCache();
+	if(scalar(@update_list) > 0){
+		print "Following addons are going to be updated:\n",join(', ',@update_list),"\nIs that ok? (y/n):";
+		my $answer = <STDIN>;
+		chomp($answer);
+		exit if($answer=~ /^n/i);
+		foreach my $addonToUpdate (@update_list){
+			print "Update:\t$addonToUpdate\t\t\t\t:\t";
+			my ($status,$msg) = installAddon($addonToUpdate);
+			if($status){
+				print BOLD,GREEN,"updated",RESET," ($installed_addon_table{$addonToUpdate}->{Name} $installed_addon_table{$addonToUpdate}->{Version}).\n";
+			}
+			else{
+				print BOLD,RED,"update failed ($msg).\n",RESET;
+			}
+		}
+		writeInstalledCache();
+	}
+	else{
+		print "Your addons are already up-to-date.\n";
+	}
 }
 elsif($cmd eq 'clean'){
 	remove_tree("$config{config_dir}/cache",{error => \my $err});
