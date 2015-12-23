@@ -48,7 +48,7 @@ Then you shoudl be able to install/update/add/search easily:
 wocli.pl install bagnon titan-panel gatherer
 ```
 
-Please note that for install we need what we call "shortnames", wich is the X-Curse-Project-ID. When you search for an addon, the shortname is displayed first in green in the results list.
+Please note that for install we need what we call "shortnames", wich is the X-Curse-Project-ID. When you search for an addon, the shortname is displayed first in green in the results list (here in bold).
 ```bash
 [adupuis@localhost wocli] $ ./wocli.pl search gath
 **gathernow**: Give logical progression of Mining, Herbalism & Skinning. Will not be updated with WoD zones
@@ -62,6 +62,9 @@ Please note that for install we need what we call "shortnames", wich is the X-Cu
 **gathermate_sharing**: Database sharing module for GatherMate2
 
 Found 9 partial name results.
+[adupuis@localhost wocli] $ ./wocli.pl install gathermate2 gathermate2_data
+Install:        gathermate2                                       :     installed (GatherMate2 1.35.5).
+Install:        gathermate2_data                                  :     installed (GatherMate2_Data v29.4).
 
 ```
 
