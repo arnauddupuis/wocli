@@ -51,15 +51,15 @@ wocli.pl install bagnon titan-panel gatherer
 Please note that for install we need what we call "shortnames", wich is the X-Curse-Project-ID. When you search for an addon, the shortname is displayed first in green in the results list.
 ```bash
 [adupuis@localhost wocli] $ ./wocli.pl search gath
-gathernow: Give logical progression of Mining, Herbalism & Skinning. Will not be updated with WoD zones
-gathermate2: Collects Herbs, Mines, Gas Clouds, Archaeology, Treasure and Fishing locations and adds them to the worldmap and minimap
-titan-gathered: This simple WoW addon track all useful tradeitems and materials in your bag and show result in Titan Bar. Over right click is...
-gathermate2_data-carbonite: GatherMate2 Data - Carbonite Edition
-ygather: English yGather - Gatherers Map is a resource stack mapper. It records resource stack locations as you walk by and shows them...
-gatherer: Helps track the closest plants, deposits and treasure locations on your minimap.
-gathermate2_data: Wowhead Data dump for GatherMate2
-gathertip: Show useful Tooltip for gather information!
-gathermate_sharing: Database sharing module for GatherMate2
+**gathernow**: Give logical progression of Mining, Herbalism & Skinning. Will not be updated with WoD zones
+**gathermate2**: Collects Herbs, Mines, Gas Clouds, Archaeology, Treasure and Fishing locations and adds them to the worldmap and minimap
+**titan-gathered**: This simple WoW addon track all useful tradeitems and materials in your bag and show result in Titan Bar. Over right click is...
+**gathermate2_data-carbonite**: GatherMate2 Data - Carbonite Edition
+**ygather**: English yGather - Gatherers Map is a resource stack mapper. It records resource stack locations as you walk by and shows them...
+**gatherer**: Helps track the closest plants, deposits and treasure locations on your minimap.
+**gathermate2_data**: Wowhead Data dump for GatherMate2
+**gathertip**: Show useful Tooltip for gather information!
+**gathermate_sharing**: Database sharing module for GatherMate2
 
 Found 9 partial name results.
 
