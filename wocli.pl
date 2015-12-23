@@ -314,7 +314,7 @@ debug_print "COMMAND: $cmd\n";
 
 if($cmd eq 'install') {
 	foreach my $addonToInstall (@ARGV){
-		print "Install:\t$addonToInstall\t\t\t\t:\t";
+		print "Install:\t$addonToInstall"." "x(50- length($addonToInstall)).":\t";
 		# TODO install Dependencies!
 		my ($status,$msg) = installAddon($addonToInstall);
 		if($status){
