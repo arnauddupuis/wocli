@@ -412,7 +412,7 @@ elsif($cmd eq 'update'){
 		chomp($answer);
 		exit if($answer=~ /^n/i);
 		foreach my $addonToUpdate (@update_list){
-			print "Update:\t$addonToUpdate\t\t\t\t:\t";
+			print "Update:\t$addonToUpdate"." "x(50- length($addonToUpdate)).":\t";
 			my ($status,$msg) = installAddon($addonToUpdate);
 			if($status){
 				print BOLD,GREEN,"updated",RESET," ($installed_addon_table{$addonToUpdate}->{Name} $installed_addon_table{$addonToUpdate}->{Version}).\n";
