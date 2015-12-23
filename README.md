@@ -88,7 +88,8 @@ If it is not the case of your addon (likely to happen), just add it to the list.
 You don't need to do it for addon installed with wocli.
 
 WARNING: wocli will NOT verify that the addon is actually installed (only that the addon name is a valid one). It means that next time you update your addons, it will install the addon that were added and not previously installed.
-
+```bash
 wocli.pl add titan-panel titan-panel-attributes-multi
+```
 
 
