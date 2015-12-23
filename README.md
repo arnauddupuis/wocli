@@ -36,6 +36,35 @@ The following Perl modules are used, they should be part of the Perl distributio
 * XML::Simple
 * Term::ANSIColor
 
+
+However, if you want to install system wide, you can do:
+```bash
+[adupuis@localhost wocli] $ sudo "make"
+[sudo] password for adupuis: 
+install -m 0755 wocli.pl /usr/local/bin
+ln -s /usr/local/bin/wocli.pl /usr/local/bin/wocli
+```
+
+you can then call wocli system wide (even without the .pl!):
+```bash
+[adupuis@localhost ~] $ wocli search aki
+speakinspell: Says random things in chat when casting any spell or ability. Type "/ss help" for the user's manual.
+
+Found 1 partial name results.
+
+
+```
+
+## Uninstall
+
+If you did install wocli you can uninstall it:
+```bash
+[adupuis@localhost wocli] $ sudo make uninstall
+rm -f /usr/local/bin/wocli.pl
+rm -f /usr/local/bin/wocli
+
+```
+
 ### Quick first run
 
 First, tell wocli where your Wordl of Warcraft install is (and build the cache at the same time):

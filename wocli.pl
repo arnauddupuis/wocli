@@ -28,6 +28,7 @@ my %config = (
 	uri_complete_db => 'http://clientupdate.curse.com/feed/Complete.xml.bz2'
 );
 my $DEBUG=0;
+my $VERSION="0.5";
 my $total_page=1;
 my $db = "wocli_db.csv";
 my $addon_list_content="";
@@ -336,7 +337,7 @@ else{
 	updateCache();
 }
 
-die "command required: install, update, remove, search, clean, builddb, buildcache.\n" unless(defined($ARGV[0]));
+die "Wocli v$VERSION.\ncommand required: install, update, remove, search, clean, builddb, buildcache.\n" unless(defined($ARGV[0]));
 
 my $cmd = shift(@ARGV);
 debug_print "Self is: $^X $0\n";
