@@ -374,7 +374,7 @@ elsif($cmd eq 'buildcache'){
 	updateCache();
 }
 elsif($cmd eq 'search'){
-	my $query = join("", @ARGV);
+	my $query = join(" ", @ARGV);
 	debug_print "search query is '$query'\n";
 	if(exists($addon_table{$query})){
 		print "Found one exact match:\n", BOLD, GREEN, $query, RESET,": $addon_table{$query}->{Summary}\n";
@@ -388,10 +388,24 @@ elsif($cmd eq 'search'){
 			}
 		}
 		if($results > 0){
-			print "\nFound ", BOLD, YELLOW, $results, RESET," results.\n";
+			print "\nFound ", BOLD, YELLOW, $results, RESET," partial name results.\n\n";
 		}
 		else{
-			print "Sorry, we found no matching results for: ",BOLD, RED,$query,RESET,"\n";
+			if($results <= 5){
+				my $ext_results=0;
+				foreach my $key (keys(%addon_table)){
+					if($addon_table{$key}->{Summary} =~ /^.*$query.*$/i){
+						$ext_results++;
+						print BOLD,GREEN, $key,RESET,": $addon_table{$key}->{Summary}\n";
+					}
+				}
+				if($ext_results > 0){
+					print "\nFound ", BOLD, YELLOW, $results, RESET," partial match in addons' summary.\n\n";
+				}
+				else{
+					print "Sorry, we found no matching results for: ",BOLD, RED,$query,RESET,"\n\n";
+				}
+			}
 		}
 	}
 }
