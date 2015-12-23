@@ -8,7 +8,7 @@ use Getopt::Long;
 use File::Path qw(make_path remove_tree);
 use IO::Uncompress::Bunzip2 qw(bunzip2 $Bunzip2Error) ;
 use XML::Simple qw(:strict);
-use DBI;
+use Term::ANSIColor qw(:constants);
 
 # Setting autoflush to immediate flush.
 $|++;
@@ -37,7 +37,6 @@ my %base_urls = (
 	category => 'http://www.curse.com/addons/wow/category',
 );
 my $ua;
-my $dbi;
 
 # Options
 my $opt_build_cache=0;
@@ -373,6 +372,28 @@ elsif($cmd eq 'clean'){
 elsif($cmd eq 'buildcache'){
 	debug_print "Building new cache\n";
 	updateCache();
+}
+elsif($cmd eq 'search'){
+	my $query = join("", @ARGV);
+	debug_print "search query is '$query'\n";
+	if(exists($addon_table{$query})){
+		print "Found one exact match:\n", BOLD, GREEN, $query, RESET,": $addon_table{$query}->{Summary}\n";
+	}
+	else{
+		my $results=0;
+		foreach my $key (keys(%addon_table)){
+			if($key =~ /^.*$query.*$/i){
+				$results++;
+				print BOLD,GREEN, $key,RESET,": $addon_table{$key}->{Summary}\n";
+			}
+		}
+		if($results > 0){
+			print "\nFound ", BOLD, YELLOW, $results, RESET," results.\n";
+		}
+		else{
+			print "Sorry, we found no matching results for: ",BOLD, RED,$query,RESET,"\n";
+		}
+	}
 }
 else{
 	die "Unknown command: $cmd\n";
