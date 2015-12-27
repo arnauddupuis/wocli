@@ -28,7 +28,7 @@ my %config = (
 	uri_complete_db => 'http://clientupdate.curse.com/feed/Complete.xml.bz2'
 );
 my $DEBUG=0;
-my $VERSION="0.5";
+my $VERSION="0.6.0";
 my $total_page=1;
 my $db = "wocli_db.csv";
 my $addon_list_content="";
@@ -287,6 +287,11 @@ sub updateCache {
 	
 }
 
+sub showVersion {
+	print BOLD,GREEN,"wocli",RESET," version ",BOLD,YELLOW,$VERSION,RESET,"\n\nThanks for your support!\n\n";
+	exit(0);
+}
+
 
 
 # Getting options from command line.
@@ -298,7 +303,8 @@ GetOptions(
   "wow-dir=s" => \$opt_wow_dir,
   "save" => \$opt_write_config,
   "no-integrity-check" => \$opt_no_integrity_check,
-  "debug" => \$DEBUG
+  "debug" => \$DEBUG,
+  "version" => \&showVersion
 );
 
 # Loading configuration 
