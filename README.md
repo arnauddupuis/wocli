@@ -107,6 +107,7 @@ Here is a list of the commands and options you can use.
 * **--wow-dir**: Set the World of Warcraft directory (on my computer it looks like: $ENV{HOME}/.cxoffice/World\ of\ Warcraft/drive_c/Program\ Files/World\ of\ Warcraft/). It only affect the current session. See --save for permanent changes.
 * **--save**: is going to save your configuration in $ENV{HOME}/.wocli/config.
 * **--debug**: turn debug on, meaning: lots of debug messages and lots of intermediate data saved in your local cache ($ENV{HOME}/.wocli/cache/).
+* **--db-ttl**: takes an integer as parameter. It will set the cache time to live in seconds. Default is set to 7200 (2 hours). Do not set it to high to avoid issue with DB not synced with Curse.com.
 
 #### Commands
 
