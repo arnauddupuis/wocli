@@ -33,6 +33,7 @@ my $VERSION="0.6.0";
 my $DB_VERSION=2;
 my $last_cache_build=-1;
 my %cache_meta=();
+my %addon_index = ();
 my $total_page=1;
 my $db = "wocli_db.csv";
 my $addon_list_content="";
@@ -159,8 +160,14 @@ sub writeCache{
 	open(my $fh,">:encoding(UTF-8)",$db_file) or die "Can't open $db_file for writing\n";
 	print $fh "#!db_time=$last_cache_build|db_version=$DB_VERSION\n";
 	debug_print "Cache header written: #!db_time=$last_cache_build|db_version=$DB_VERSION\n";
+	# Dependcy types: Embedded, Required, Optional => we're saving deps in that order.
 	foreach my $addon_shortname (keys(%addon_table)){
-		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Id};$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary}\n";
+		# Set default value for CSV
+		$addon_table{$addon_shortname}->{Dependencies}->{Embedded} = ['wocli-none'] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}} ) == 0 );
+		$addon_table{$addon_shortname}->{Dependencies}->{Required} = ['wocli-none'] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Required}} ) == 0 );
+		$addon_table{$addon_shortname}->{Dependencies}->{Optional} = ['wocli-none'] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Optional}} ) == 0 );
+		
+		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Id};$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary};".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Required}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Optional}}).";".int($addon_table{$addon_shortname}->{Score})."\n";
 	}
 	close($fh);
 	$cache_meta{db_time}=$last_cache_build;
@@ -186,20 +193,24 @@ sub loadCache {
 		print BOLD,RED,"WARNING:",RESET," unable to find database time of build and/or version. Cache will be rebuilt, if it doesn't fix the warning please submit a bug report at https://github.com/arnauddupuis/wocli/issues\n";
 	}
 	
-	
+	%addon_index = ();
+	%addon_table = ();
 	while(my $line = <$fh>){
 		chomp($line);
 		my @split = split(/;/,$line);
 		my $shortname = $split[0];
-		if(scalar(@split) == 6 ){
-			$addon_table{$shortname} = {Id => $split[1], Name => $split[2], DownloadUrl => $split[3], Version => $split[4], Summary => "$split[5]"};
+		if(scalar(@split) == 10 ){
+			$addon_table{$shortname} = {Id => $split[1], Name => $split[2], DownloadUrl => $split[3], Version => $split[4], Summary => "$split[5]", Dependencies => {Embedded => [split(/\|/,$split[6])], Required => [split(/\|/,$split[7])], Optional => [split(/\|/,$split[8])]}, Score => $split[9] };
+# 			debug_print "Adding $shortname to the addon_index with id $split[1]\n";
+			$addon_index{$split[1]} = $shortname;
 		}
 		else{
-			debug_print "Not enought field for: $shortname (".scalar(@split)."/6)\n";
-			$addon_table{$shortname} = {Id => -1, Name => "$shortname", DownloadUrl => "", Version => "0.0.0", Summary => ""};
+			debug_print "Not enought field for: $shortname (".scalar(@split)."/10)\n";
+			$addon_table{$shortname} = {Id => -1, Name => "$shortname", DownloadUrl => "", Version => "0.0.0", Summary => "", Dependencies => {Embedded => [], Required => [], Optional => []}, Score => 0};
 		}
 	}
 	close($fh);
+# 	debug_print Data::Dumper::Dumper(%addon_table),"\n";
 }
 
 sub writeInstalledCache{
@@ -278,21 +289,20 @@ sub loadToc{
 
 sub updateCache {
 	make_path("$config{config_dir}/cache/tmp/") unless( -d "$config{config_dir}/cache/tmp/");
-	# TODO: turn that to actual proper code...
 	debug_print "Downloading new cache\n";
 	print "Downloading cache...";
 	system("rm -rf $config{config_dir}/cache/tmp/*");
 	my $response = $ua->get($config{uri_complete_db},':content_file'=>"$config{config_dir}/cache/tmp/Complete.xml.bz2");
-
+	
 	if($response->is_success){
 		print "ok\n";
 		debug_print "Unziping database\n";
 		print "Unzipping database...";
 		my $status = bunzip2 "$config{config_dir}/cache/tmp/Complete.xml.bz2" => "$config{config_dir}/cache/tmp/Complete.xml" or die "bunzip2 failed: $Bunzip2Error\n";
 		print "ok\n";
-		# TODO: Parse the XML...
 		print "Parsing XML...";
-		my $complete = XMLin("$config{config_dir}/cache/tmp/Complete.xml", KeyAttr => {}, ForceArray => [ 'CAddOnCategory', 'Dependencies', 'CAddOnFileDependency', 'Modules', 'CAddOnModule', 'a:string', 'CAddOnAuthor', 'CAddOnFile' ]);
+		my $complete = XMLin("$config{config_dir}/cache/tmp/Complete.xml", KeyAttr => {}, ForceArray => [ 'CAddOnCategory', 'CAddOnFileDependency', 'Modules', 'CAddOnModule', 'a:string', 'CAddOnAuthor', 'CAddOnFile' ]);
+# 		debug_print Data::Dumper::Dumper($complete),"\n";
 		print "ok\n";
 		my $wac = 0;
 		my $tac = 0;
@@ -302,7 +312,23 @@ sub updateCache {
 				$wac++;
 				$caddon->{'Summary'} =~ s/;/,/g;
 				my @url = split(/\//,$caddon->{'WebSiteURL'});
-				$addon_table{$url[$#url]} = { Id => $caddon->{'Id'}, Name => $caddon->{'Name'}, DownloadUrl => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'DownloadURL'}, Version => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'FileName'}, Summary => "$caddon->{'Summary'}" };
+				$addon_table{$url[$#url]} = { Id => $caddon->{'Id'}, Name => $caddon->{'Name'}, DownloadUrl => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'DownloadURL'}, Version => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'FileName'}, Summary => "$caddon->{'Summary'}", Dependencies => {Embedded => [], Required => [], Optional => []}, Score => 0 };
+
+				if(defined($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}) && ref($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}) eq 'HASH' && defined($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}->{'CAddOnFileDependency'})){
+					foreach my $dep ( @{$caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}->{'CAddOnFileDependency'}} ){
+						if( exists($addon_index{$dep->{AddOnId}}) && defined($addon_index{$dep->{AddOnId}}) ){
+							# If $dep->{'Type'} is not in Embded, Required or Optional it will be ignored at cache writing time.
+							debug_print "adding '$addon_index{$dep->{AddOnId}}' as '$dep->{'Type'}' dependency to $caddon->{Name}\n";
+							push @{$addon_table{$url[$#url]}->{Dependencies}->{$dep->{'Type'}}}, $addon_index{$dep->{AddOnId}};
+						}
+					}
+				}
+				
+				$addon_table{$url[$#url]}->{Score} += int($caddon->{DownloadCount}/2) if( defined($caddon->{DownloadCount}) );
+				$addon_table{$url[$#url]}->{Score} += $caddon->{CommentCount} if( defined($caddon->{CommentCount}) );
+				$addon_table{$url[$#url]}->{Score} += int($caddon->{InstallCount}*1.5) if( defined($caddon->{InstallCount}) );
+				$addon_table{$url[$#url]}->{Score} += int($caddon->{Likes}*20) if( defined($caddon->{Likes}) );
+				$addon_table{$url[$#url]}->{Score} /= 4;
 			}
 			$tac++;
 		}
@@ -311,7 +337,10 @@ sub updateCache {
 		debug_print "WoW addons found (WoW/Total): $wac/$tac\n";
 		print "Cache updated with $wac addons.\n\n";
 		$last_cache_build=time();
+		print "Writing cache on disk...";
 		writeCache();
+		print "ok\n";
+		
 	}
 	else{
 		print "not ok.\n";
@@ -340,6 +369,9 @@ sub updateCacheIfNeeded {
 		}
 		print BOLD,YELLOW,"Cache update required:",RESET," your cache exceed the database time to live limit of $ttd $ttd_unit, so it will be updated now.\n";
 		updateCache();
+		print "Loading new cache...";
+		loadCache();
+		print "ok\n";
 	}
 	else{
 		debug_print "Cache is not out of date: $time - $cache_meta{db_time} = ",($time - $cache_meta{db_time})," < $opt_db_ttl\n";
