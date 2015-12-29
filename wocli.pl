@@ -59,6 +59,7 @@ my $opt_update_cache_standalone=0;
 my $opt_update_cache_max_processes=0; # not used right now
 my $opt_no_integrity_check=0; # This option prevent integrity checks (like trying to install an addon that isn't existing).
 my $opt_db_ttl=-1;
+my $opt_show_config=0;
 
 # Methods
 
@@ -385,6 +386,15 @@ sub showVersion {
 	exit(0);
 }
 
+sub showConfig{
+	my $label="| WOCLI CONFIGURATION |";
+	print " " x 15,"-" x length($label),"\n"," " x 15,"$label\n"," " x 15,"-" x length($label),"\n";
+	foreach my $key (sort keys %config){
+		print BOLD,$key,RESET," "x(20- length($key)),": "," $config{$key}\n";
+	}
+	print "\n";
+}
+
 
 
 # Getting options from command line.
@@ -398,7 +408,8 @@ GetOptions(
   "no-integrity-check" => \$opt_no_integrity_check,
   "debug" => \$DEBUG,
   "db-ttl=i" => \$opt_db_ttl,
-  "version" => \&showVersion
+  "version" => \&showVersion,
+  "show-config" => \$opt_show_config
 );
 
 # Loading configuration 
@@ -421,6 +432,8 @@ debug_print "DB TTL: $opt_db_ttl\n";
 
 mkdir $config{'config_dir'} unless (-e $config{'config_dir'});
 mkdir "$config{'config_dir'}/cache" unless (-e "$config{'config_dir'}/cache");
+
+showConfig() if($opt_show_config);
 
 saveConfig() if($opt_write_config);
 
@@ -517,7 +530,6 @@ if($cmd eq 'install') {
 	
 	foreach my $addonToInstall (sort @addonsToInstall){
 		print "Install:\t$addonToInstall"." "x(50- length($addonToInstall)).":\t";
-		# TODO install Dependencies!
 		my ($status,$msg) = installAddon($addonToInstall);
 		if($status){
 			print BOLD,GREEN,"installed",RESET," ($installed_addon_table{$addonToInstall}->{Name} $installed_addon_table{$addonToInstall}->{Version}).\n";
@@ -652,6 +664,9 @@ elsif($cmd eq 'search'){
 			}
 		}
 	}
+}
+elsif($cmd eq 'showconfig'){
+	showConfig();
 }
 else{
 	die "Unknown command: $cmd\n";
