@@ -105,9 +105,11 @@ Here is a list of the commands and options you can use.
 
 * **--build-cache**: Force wocli to rebuild the addon cache. If this option is not set and the cache is recent enough wocli will start faster by just loading existing cache.
 * **--wow-dir**: Set the World of Warcraft directory (on my computer it looks like: $ENV{HOME}/.cxoffice/World\ of\ Warcraft/drive_c/Program\ Files/World\ of\ Warcraft/). It only affect the current session. See --save for permanent changes.
-* **--save**: is going to save your configuration in $ENV{HOME}/.wocli/config.
-* **--debug**: turn debug on, meaning: lots of debug messages and lots of intermediate data saved in your local cache ($ENV{HOME}/.wocli/cache/).
-* **--db-ttl**: takes an integer as parameter. It will set the cache time to live in seconds. Default is set to 7200 (2 hours). Do not set it to high to avoid issue with DB not synced with Curse.com.
+* **--save**: Is going to save your configuration in $ENV{HOME}/.wocli/config.
+* **--debug**: Turn debug on, meaning: lots of debug messages and lots of intermediate data saved in your local cache ($ENV{HOME}/.wocli/cache/).
+* **--db-ttl**: Takes an integer as parameter. It will set the cache time to live in seconds. Default is set to 7200 (2 hours). Do not set it to high to avoid issue with DB not synced with Curse.com.
+* **--show-config**: Display the configuration before processing other tasks.
+* **--version**: Display wocli version and exit.
 
 #### Commands
 
@@ -153,5 +155,27 @@ WARNING: wocli will NOT verify that the addon is actually installed (only that t
 ```bash
 wocli.pl add titan-panel titan-panel-attributes-multi
 ```
+
+##### showconfig
+
+Simply display the wocli current configuration. It looks like that:
+```
+[adupuis@localhost wocli] $ ./wocli.pl showconfig
+               -----------------------
+               | WOCLI CONFIGURATION |
+               -----------------------
+config_dir          :  /home/adupuis/.wocli
+config_file         :  config
+db                  :  /home/adupuis/.wocli/cache/wocli_db.csv
+db_ttl              :  900
+installed_db        :  /home/adupuis/.wocli/wocli_installed_db.csv
+uri_category        :  /addons/wow/category
+uri_complete_db     :  http://clientupdate.curse.com/feed/Complete.xml.bz2
+uri_home            :  /addons/wow?page=1
+url_base            :  http://www.curse.com
+wow_dir             :  ./test/
+
+```
+
 
 
