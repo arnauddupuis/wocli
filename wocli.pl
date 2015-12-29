@@ -30,6 +30,7 @@ my %config = (
 );
 my $DEBUG=0;
 my $VERSION="0.6.0";
+my $WOCLI_NONE = 'wocli-none';
 my $DB_VERSION=2;
 my $last_cache_build=-1;
 my %cache_meta=();
@@ -163,9 +164,9 @@ sub writeCache{
 	# Dependcy types: Embedded, Required, Optional => we're saving deps in that order.
 	foreach my $addon_shortname (keys(%addon_table)){
 		# Set default value for CSV
-		$addon_table{$addon_shortname}->{Dependencies}->{Embedded} = ['wocli-none'] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}} ) == 0 );
-		$addon_table{$addon_shortname}->{Dependencies}->{Required} = ['wocli-none'] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Required}} ) == 0 );
-		$addon_table{$addon_shortname}->{Dependencies}->{Optional} = ['wocli-none'] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Optional}} ) == 0 );
+		$addon_table{$addon_shortname}->{Dependencies}->{Embedded} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}} ) == 0 );
+		$addon_table{$addon_shortname}->{Dependencies}->{Required} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Required}} ) == 0 );
+		$addon_table{$addon_shortname}->{Dependencies}->{Optional} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Optional}} ) == 0 );
 		
 		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Id};$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary};".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Required}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Optional}}).";".int($addon_table{$addon_shortname}->{Score})."\n";
 	}
@@ -446,7 +447,75 @@ debug_print "COMMAND: $cmd\n";
 
 if($cmd eq 'install') {
 	updateCacheIfNeeded();
+	my %installation = (Optional => [], Required => [], Embedded => [], Addons => [], NotFound => []);
 	foreach my $addonToInstall (@ARGV){
+		if( exists( $addon_table{$addonToInstall} ) ){
+			push @{$installation{Addons}}, $addonToInstall;
+			foreach my $dep_type ('Optional','Required','Embedded'){
+				foreach my $dep ( @{ $addon_table{$addonToInstall}->{Dependencies}->{$dep_type} } ){
+					next if($dep eq $WOCLI_NONE);
+					push @{$installation{$dep_type}}, $dep; 
+				}
+			}
+		}
+		else {
+			push @{$installation{NotFound}}, $addonToInstall;
+		}
+	}
+	
+	print "The following addons will be ".BOLD.GREEN."installed".RESET.":\n",BOLD,GREEN,join(RESET.", ".BOLD.GREEN,@{$installation{Addons}}),RESET,"\n\n";
+	my @menu = ("What do you want to do?\n");
+	if( scalar( @{$installation{Required}} ) > 0 ){
+		print "The following ".BOLD.YELLOW."dependencies are required".RESET." and will be installed:\n",BOLD,YELLOW,join(RESET.", ".BOLD.YELLOW,@{$installation{Required}}),RESET,"\n\n";
+		push @menu,"R) Install addons + required dependencies.\n";
+	}
+	else{
+		push @menu,"A) Install addons without installing any optional dependencies.\n";
+	}
+	
+	if( scalar( @{$installation{Optional}} ) > 0 ){
+		print "The following ".BOLD.CYAN."dependencies are optional".RESET." and SHOULD be installed:\n",BOLD,CYAN,join(RESET.", ".BOLD.CYAN,@{$installation{Optional}}),RESET,"\n\n";
+		push @menu,"O) Install addons + required dependencies (if any) + optional dependencies.\n";
+	}
+	
+	if( scalar( @{$installation{Embedded}} ) > 0 ){
+		print "The following ".BOLD.MAGENTA."dependencies are nice to have".RESET." and MAY be installed:\n",BOLD,MAGENTA,join(RESET.", ".BOLD.MAGENTA,@{$installation{Embedded}}),RESET,"\n\n";
+		push @menu,"E) Install addons + required dependencies (if any) + optional dependencies (if any) + nice to have dependencies.\n";
+	}
+	
+	push @menu, "N) Do nothing and exit.\n> ";
+	print join("",@menu);
+	my $answer = <STDIN>;
+	chomp($answer);
+	exit(1) if($answer =~ /^n/i);
+	my @addonsToInstall = ();
+	if( $answer =~ /^A/i){
+		debug_print "Adding addons to the install stack.\n";
+		foreach my $val (@{$installation{Addons}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	elsif( $answer =~ /^R/i){
+		debug_print "Adding Required dependencies to the install stack.\n";
+		foreach my $val (@{$installation{Addons}},@{$installation{Required}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	elsif( $answer =~ /^O/i){
+		debug_print "Adding Optional dependencies to the install stack.\n";
+		foreach my $val (@{$installation{Addons}},@{$installation{Required}},@{$installation{Optional}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	elsif( $answer =~ /^E/i){
+		debug_print "Adding Embedded dependencies to the install stack.\n";
+		foreach my $val (@{$installation{Addons}},@{$installation{Required}},@{$installation{Optional}},@{$installation{Embedded}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	
+	
+	foreach my $addonToInstall (sort @addonsToInstall){
 		print "Install:\t$addonToInstall"." "x(50- length($addonToInstall)).":\t";
 		# TODO install Dependencies!
 		my ($status,$msg) = installAddon($addonToInstall);
