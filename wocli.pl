@@ -31,7 +31,7 @@ my %config = (
 my $DEBUG=0;
 my $VERSION="0.6.0";
 my $WOCLI_NONE = 'wocli-none';
-my $DB_VERSION=2;
+my $DB_VERSION=3;
 my $last_cache_build=-1;
 my %cache_meta=();
 my %addon_index = ();
@@ -168,8 +168,9 @@ sub writeCache{
 		$addon_table{$addon_shortname}->{Dependencies}->{Embedded} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}} ) == 0 );
 		$addon_table{$addon_shortname}->{Dependencies}->{Required} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Required}} ) == 0 );
 		$addon_table{$addon_shortname}->{Dependencies}->{Optional} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Optional}} ) == 0 );
+		$addon_table{$addon_shortname}->{Folders} = [$WOCLI_NONE] if( !defined($addon_table{$addon_shortname}->{Folders}) || scalar( @{$addon_table{$addon_shortname}->{Folders}} ) == 0 );
 		
-		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Id};$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary};".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Required}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Optional}}).";".int($addon_table{$addon_shortname}->{Score})."\n";
+		print $fh "$addon_shortname;$addon_table{$addon_shortname}->{Id};$addon_table{$addon_shortname}->{Name};$addon_table{$addon_shortname}->{DownloadUrl};$addon_table{$addon_shortname}->{Version};$addon_table{$addon_shortname}->{Summary};".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Required}}).";".join('|',@{$addon_table{$addon_shortname}->{Dependencies}->{Optional}}).";".int($addon_table{$addon_shortname}->{Score}).";".join('|',@{$addon_table{$addon_shortname}->{Folders}})."\n";
 	}
 	close($fh);
 	$cache_meta{db_time}=$last_cache_build;
@@ -185,6 +186,11 @@ sub loadCache {
 	if($firstline =~ /^#!db_time=(\d+)\|db_version=(\d)$/){
 		$cache_meta{db_time}=$1;
 		$cache_meta{db_version}=$2;
+		if($cache_meta{db_version} != $DB_VERSION){
+			print BOLD,RED,"WARNING:",RESET," your cache version doesn't match the requirement. Cache will be rebuilt. If it doesn't fix the warning please submit a bug report at https://github.com/arnauddupuis/wocli/issues\n";
+			updateCacheIfNeeded();
+			return;
+		}
 		if($last_cache_build == -1){
 			$last_cache_build = $cache_meta{db_time};
 		}
@@ -193,6 +199,8 @@ sub loadCache {
 		$cache_meta{db_time}=0;
 		$cache_meta{db_version}=0;
 		print BOLD,RED,"WARNING:",RESET," unable to find database time of build and/or version. Cache will be rebuilt, if it doesn't fix the warning please submit a bug report at https://github.com/arnauddupuis/wocli/issues\n";
+		updateCacheIfNeeded();
+		return;
 	}
 	
 	%addon_index = ();
@@ -201,8 +209,8 @@ sub loadCache {
 		chomp($line);
 		my @split = split(/;/,$line);
 		my $shortname = $split[0];
-		if(scalar(@split) == 10 ){
-			$addon_table{$shortname} = {Id => $split[1], Name => $split[2], DownloadUrl => $split[3], Version => $split[4], Summary => "$split[5]", Dependencies => {Embedded => [split(/\|/,$split[6])], Required => [split(/\|/,$split[7])], Optional => [split(/\|/,$split[8])]}, Score => $split[9] };
+		if(scalar(@split) == 11 ){
+			$addon_table{$shortname} = {Id => $split[1], Name => $split[2], DownloadUrl => $split[3], Version => $split[4], Summary => "$split[5]", Dependencies => {Embedded => [split(/\|/,$split[6])], Required => [split(/\|/,$split[7])], Optional => [split(/\|/,$split[8])]}, Score => $split[9], Folders => [split(/\|/,$split[10])] };
 # 			debug_print "Adding $shortname to the addon_index with id $split[1]\n";
 			$addon_index{$split[1]} = $shortname;
 		}
@@ -293,7 +301,7 @@ sub updateCache {
 	make_path("$config{config_dir}/cache/tmp/") unless( -d "$config{config_dir}/cache/tmp/");
 	debug_print "Downloading new cache\n";
 	print "Downloading cache...";
-	system("rm -rf $config{config_dir}/cache/tmp/*");
+	system("rm -rf $config{config_dir}/cache/tmp/Complete*");
 	my $response = $ua->get($config{uri_complete_db},':content_file'=>"$config{config_dir}/cache/tmp/Complete.xml.bz2");
 	
 	if($response->is_success){
@@ -303,7 +311,7 @@ sub updateCache {
 		my $status = bunzip2 "$config{config_dir}/cache/tmp/Complete.xml.bz2" => "$config{config_dir}/cache/tmp/Complete.xml" or die "bunzip2 failed: $Bunzip2Error\n";
 		print "ok\n";
 		print "Parsing XML...";
-		my $complete = XMLin("$config{config_dir}/cache/tmp/Complete.xml", KeyAttr => {}, ForceArray => [ 'CAddOnCategory', 'CAddOnFileDependency', 'Modules', 'CAddOnModule', 'a:string', 'CAddOnAuthor', 'CAddOnFile' ]);
+		my $complete = XMLin("$config{config_dir}/cache/tmp/Complete.xml", KeyAttr => {}, ForceArray => [ 'CAddOnCategory', 'CAddOnFileDependency', 'CAddOnModule', 'a:string', 'CAddOnAuthor', 'CAddOnFile', 'CAddOnModule' ]);
 # 		debug_print Data::Dumper::Dumper($complete),"\n";
 		print "ok\n";
 		my $wac = 0;
@@ -314,8 +322,9 @@ sub updateCache {
 				$wac++;
 				$caddon->{'Summary'} =~ s/;/,/g;
 				my @url = split(/\//,$caddon->{'WebSiteURL'});
-				$addon_table{$url[$#url]} = { Id => $caddon->{'Id'}, Name => $caddon->{'Name'}, DownloadUrl => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'DownloadURL'}, Version => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'FileName'}, Summary => "$caddon->{'Summary'}", Dependencies => {Embedded => [], Required => [], Optional => []}, Score => 0 };
-
+				$addon_table{$url[$#url]} = { Id => $caddon->{'Id'}, Name => $caddon->{'Name'}, DownloadUrl => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'DownloadURL'}, Version => $caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'FileName'}, Summary => "$caddon->{'Summary'}", Dependencies => {Embedded => [], Required => [], Optional => []}, Score => 0, Folders => [] };
+				
+				# Getting dependencies
 				if(defined($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}) && ref($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}) eq 'HASH' && defined($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}->{'CAddOnFileDependency'})){
 					foreach my $dep ( @{$caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Dependencies'}->{'CAddOnFileDependency'}} ){
 						if( exists($addon_index{$dep->{AddOnId}}) && defined($addon_index{$dep->{AddOnId}}) ){
@@ -323,6 +332,14 @@ sub updateCache {
 							debug_print "adding '$addon_index{$dep->{AddOnId}}' as '$dep->{'Type'}' dependency to $caddon->{Name}\n";
 							push @{$addon_table{$url[$#url]}->{Dependencies}->{$dep->{'Type'}}}, $addon_index{$dep->{AddOnId}};
 						}
+					}
+				}
+				
+				# Getting folders
+				if(defined($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Modules'}) && ref($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Modules'}) eq 'HASH' && defined($caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Modules'}->{'CAddOnModule'})){
+					foreach my $dir ( @{$caddon->{'LatestFiles'}->{'CAddOnFile'}->[0]->{'Modules'}->{'CAddOnModule'}} ){
+						debug_print "adding Folder '$dir->{Foldername}' to addon $url[$#url]\n";
+						push @{$addon_table{$url[$#url]}->{Folders}}, $dir->{Foldername};
 					}
 				}
 				
@@ -353,6 +370,7 @@ sub updateCache {
 
 sub updateCacheIfNeeded {
 	my $time = time();
+	my $f_update_cache=0;
 	if(($time - $cache_meta{db_time}) >= $opt_db_ttl){
 		debug_print "Cache outdated, re-building it.\n";
 		my $ttd = -1;
@@ -370,13 +388,21 @@ sub updateCacheIfNeeded {
 			$ttd_unit = "hour(s)";
 		}
 		print BOLD,YELLOW,"Cache update required:",RESET," your cache exceed the database time to live limit of $ttd $ttd_unit, so it will be updated now.\n";
+		$f_update_cache=1;
+	}
+	elsif($cache_meta{db_version} != $DB_VERSION){
+		print BOLD,YELLOW,"Cache update required:",RESET," your cache version is mismatching the required version, so it will be updated now.\n";
+		$f_update_cache=1;
+	}
+	else{
+		debug_print "Cache is not out of date: $time - $cache_meta{db_time} = ",($time - $cache_meta{db_time})," < $opt_db_ttl and DB_VERSION match $cache_meta{db_version}à == $DB_VERSION\n";
+	}
+	
+	if($f_update_cache == 1){
 		updateCache();
 		print "Loading new cache...";
 		loadCache();
 		print "ok\n";
-	}
-	else{
-		debug_print "Cache is not out of date: $time - $cache_meta{db_time} = ",($time - $cache_meta{db_time})," < $opt_db_ttl\n";
 	}
 	
 }
