@@ -70,7 +70,7 @@ sub debug_print {
 }
 
 sub warning_print {
-	print BOLD,RED,"WARNIN",RESET,": ",@_;
+	print BOLD,RED,"WARNING",RESET,": ",@_;
 }
 
 sub saveConfig {
@@ -413,6 +413,7 @@ sub updateCacheIfNeeded {
 
 sub removeAddon {
 	my $addon_shortname = shift(@_);
+	my $error_messages = "";
 	if( exists( $installed_addon_table{$addon_shortname} ) ){
 		if( exists($addon_table{$addon_shortname}->{Folders}) && defined($addon_table{$addon_shortname}->{Folders}) ){
 			my $error = 0;
@@ -425,7 +426,7 @@ sub removeAddon {
 						debug_print "'$opt_wow_dir/Interface/AddOns/$tmp_folder' removed.\n";
 					}
 					else{
-						warning_print "Couldn't remove directory '$opt_wow_dir/Interface/AddOns/$tmp_folder'\n";
+						$error_messages .= "Couldn't remove directory '$opt_wow_dir/Interface/AddOns/$tmp_folder'. ";
 						$error++;
 					}
 				}
@@ -436,23 +437,24 @@ sub removeAddon {
 			unless($error > 0){
 				debug_print "removing $addon_shortname from installed addon DB.\n";
 				delete($installed_addon_table{$addon_shortname});
+				return (1,"");
 			}
 			else{
 				if( $error == scalar(@{$addon_table{$addon_shortname}->{Folders}}) ){
-					warning_print "None of the addon folders could be removed so the addon will NOT be marked as removed.\n";
+					return (0,"None of the addon folders could be removed so the addon will NOT be marked as removed. Here is a list of errors: $error_messages");
 				}
 				else {
-					warning_print "Some errors occured during removing. Please look at warnings before this line and try to fix it by end (it mostly is directory that couldn't be removed). Since some of the content has been removed wocli will mark the addon as uninstalled.\n";
 					delete($installed_addon_table{$addon_shortname});
+					return (1,"Some errors occured during removing. Please look at warnings before this line and try to fix it by end (it mostly is directory that couldn't be removed). Since some of the content has been removed wocli will mark the addon as uninstalled.");
 				}
 			}
 		}
 		else{
-			warning_print "Cannot find folder list for addon ",BOLD,YELLOW,$addon_shortname,RESET,". It is impossible to safely remove the addon automatically. Sorry, but you will have to do it by hand.\n";
+			return (0,"Cannot find folder list for addon ",BOLD,YELLOW,$addon_shortname,RESET,". It is impossible to safely remove the addon automatically. Sorry, but you will have to do it by hand.");
 		}
 	}
 	else{
-		warning_print "addon ",BOLD,YELLOW,$addon_shortname,RESET," is not installed or not tracked by ",BOLD,"wocli",RESET,".\n";
+		return (0,"addon ",BOLD,YELLOW,$addon_shortname,RESET," is not installed or not tracked by ",BOLD,"wocli",RESET);
 	}
 }
 
@@ -744,13 +746,52 @@ elsif($cmd eq 'showconfig'){
 	showConfig();
 }
 elsif($cmd eq 'remove'){
-	# TODO: take care of wildcards like "wocli remove titan*"
-	foreach my $addonToRemove (@ARGV){
-		if( exists( $installed_addon_table{$addonToRemove} ) ){
-			removeAddon($addonToRemove);
+	my @addons_list = ();
+	my %unique_addon_list = ();
+	foreach my $pattern (@ARGV){
+		if($pattern =~/\*/){
+			$pattern =~ s/\*/\.\*/g;
+			my $regexp = qr/$pattern/;
+			my $found = 0;
+			foreach my $tmp_addon (keys(%installed_addon_table)){
+				if($tmp_addon =~/$regexp/i){
+					debug_print "Adding addon '$tmp_addon' to the remove list because it matches '$regexp'.\n";
+# 					push @addons_list, $tmp_addon;
+					$unique_addon_list{$tmp_addon}=1;
+					$found++;
+				}
+			}
+			if($found == 0){
+				$pattern =~ s/\.\*/\*/g;
+				warning_print "No installed addons are matching this pattern: \"",BOLD,YELLOW,"$pattern",RESET,"\".\n";
+			}
 		}
-		else {
-			warning_print "addon ",BOLD,YELLOW,"$addonToRemove",RESET," is not installed or not tracked by ",BOLD,"wocli",RESET,".\n";
+		else{
+			if( exists( $installed_addon_table{$pattern} ) ){
+				$unique_addon_list{$pattern}=1;
+# 				push @addons_list, $pattern;
+			}
+			else {
+				warning_print "addon ",BOLD,YELLOW,"$pattern",RESET," is not installed or not tracked by ",BOLD,"wocli",RESET,".\n";
+			}
+		}
+	}
+	@addons_list = sort keys %unique_addon_list;
+	die "Nothing to remove.\n" unless(scalar(@addons_list) > 0);
+	print "Following addons are going to be removed:\n", join(', ', @addons_list),"\nIs that ok? (y/n):";
+	my $answer =<STDIN>;
+	chomp($answer);
+	exit if( $answer =~ /^n/i);
+	foreach my $addonToRemove (@addons_list){
+		print "Remove:\t$addonToRemove"." "x(50- length($addonToRemove)).":\t";
+		my ($status,$msg) = removeAddon($addonToRemove);
+		if($status){
+			my $extra_msg = '';
+			$extra_msg .= " ($msg)" if($msg ne "");
+			print BOLD,GREEN,"removed",RESET,"$extra_msg.\n";
+		}
+		else{
+			print BOLD,RED,"failed to remove ($msg).\n",RESET;
 		}
 	}
 	writeInstalledCache();

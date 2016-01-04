@@ -133,9 +133,21 @@ wocli.pl add <your addon list>
 
 PLEASE REFER TO THE DOCUMENTATION FOR BOTH OF THESE COMMANDS.
 
-##### remove [TODO]
+##### remove
 
-Remove an installed addon. It will not remove the dependencies (so far because I don't want to bother with dependencies resolution on removale ^^).
+Remove an installed addon. It is neither removing dependencies nor it is warning or removing addons that depends on the removed one.
+
+You can use the "*" wildcard in the addons names, you can even mix it with shortnames.
+
+```
+[adupuis@localhost wocli] $ ./wocli.pl remove *ell* rolecall
+Following addons are going to be removed:
+rolecall, tell-track
+Is that ok? (y/n):y
+Remove: rolecall                                          :     removed.
+Remove: tell-track                                        :     removed.
+[adupuis@localhost wocli] $ 
+```
 
 ##### clean
 
