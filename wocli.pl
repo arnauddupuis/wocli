@@ -167,7 +167,7 @@ sub writeCache{
 	print $fh "#!db_time=$last_cache_build|db_version=$DB_VERSION\n";
 	debug_print "Cache header written: #!db_time=$last_cache_build|db_version=$DB_VERSION\n";
 	# Dependcy types: Embedded, Required, Optional => we're saving deps in that order.
-	foreach my $addon_shortname (keys(%addon_table)){
+	foreach my $addon_shortname (sort keys(%addon_table)){
 		# Set default value for CSV
 		$addon_table{$addon_shortname}->{Dependencies}->{Embedded} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Embedded}} ) == 0 );
 		$addon_table{$addon_shortname}->{Dependencies}->{Required} = [$WOCLI_NONE] if(scalar( @{$addon_table{$addon_shortname}->{Dependencies}->{Required}} ) == 0 );
@@ -232,7 +232,7 @@ sub writeInstalledCache{
 	$db_file = $config{installed_db} unless(defined($db_file));
 	debug_print "writeCache: write in $db_file\n";
 	open(my $fh,">:encoding(UTF-8)",$db_file) or die "Can't open $db_file for writing\n";
-	foreach my $addon_shortname (keys(%installed_addon_table)){
+	foreach my $addon_shortname (sort keys(%installed_addon_table)){
 		print $fh "$addon_shortname;$installed_addon_table{$addon_shortname}->{Id};$installed_addon_table{$addon_shortname}->{Name};$installed_addon_table{$addon_shortname}->{DownloadUrl};$installed_addon_table{$addon_shortname}->{Version};$installed_addon_table{$addon_shortname}->{Summary}\n";
 	}
 	close($fh);
