@@ -796,6 +796,31 @@ elsif($cmd eq 'remove'){
 	}
 	writeInstalledCache();
 }
+elsif($cmd eq 'installed'){
+	print "Here is the list of World of Warcraft addons, installed on your computer:\n";
+	foreach my $addon (sort keys %installed_addon_table){
+		print "- ",BOLD,GREEN,"$installed_addon_table{$addon}->{Name}",RESET," ($installed_addon_table{$addon}->{Version})\n";
+	}
+}
+elsif($cmd eq 'info'){
+	if( exists( $addon_table{$ARGV[0]} ) ){
+		print "Here are the informations about:",BOLD,GREEN,$ARGV[0],RESET,":\n";
+		print BOLD,YELLOW,"Name: ",RESET, $addon_table{$ARGV[0]}->{Name}, "\n";
+		print BOLD,YELLOW,"Version: ",RESET, $addon_table{$ARGV[0]}->{Version}, "\n";
+		print BOLD,YELLOW,"Curse Id: ",RESET, $addon_table{$ARGV[0]}->{Id}, "\n";
+		print BOLD,YELLOW,"Required dependencies: ",RESET, join(', ',@{$addon_table{$ARGV[0]}->{Dependencies}->{Required}}), "\n" if($addon_table{$ARGV[0]}->{Dependencies}->{Required}->[0] ne $WOCLI_NONE);
+		print BOLD,YELLOW,"Optional dependencies: ",RESET, join(', ',@{$addon_table{$ARGV[0]}->{Dependencies}->{Optional}}), "\n" if($addon_table{$ARGV[0]}->{Dependencies}->{Optional}->[0] ne $WOCLI_NONE);
+		print BOLD,YELLOW,"Embedded dependencies: ",RESET, join(', ',@{$addon_table{$ARGV[0]}->{Dependencies}->{Embedded}}), "\n" if($addon_table{$ARGV[0]}->{Dependencies}->{Embedded}->[0] ne $WOCLI_NONE);
+		print BOLD,YELLOW,"Download Url: ",RESET, $addon_table{$ARGV[0]}->{DownloadUrl}, "\n";
+		print BOLD,YELLOW,"Folders: ",RESET, join(', ',@{$addon_table{$ARGV[0]}->{Folders}}), "\n";
+		print BOLD,YELLOW,"Wocli score: ",RESET, $addon_table{$ARGV[0]}->{Score}, "\n";
+		print BOLD,YELLOW,"Summary: ",RESET, $addon_table{$ARGV[0]}->{Summary}, "\n";
+		
+	}
+	else{
+		warning_print "There is no addons with '$ARGV[0]' as a shortname in the database.\nUse search to find addons and their shortnames.\n";
+	}
+}
 else{
 	die "Unknown command: $cmd\n";
 }

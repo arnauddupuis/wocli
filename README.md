@@ -189,5 +189,36 @@ wow_dir             :  ./test/
 
 ```
 
+##### info
 
+Display all the information available from Curse.com.
 
+```
+[adupuis@localhost wocli] $ ./wocli.pl info titan-panel
+Here are the informations about:titan-panel:
+Name: Titan Panel
+Version: 5.6.19.60200
+Curse Id: 489
+Download Url: http://addons.curse.cursecdn.com/files/903/469/TitanPanel-5.6.19.60200.zip
+Folders: Titan, TitanBag, TitanClock, TitanGold, TitanLocation, TitanLootType, TitanPerformance, TitanRepair, TitanVolume, TitanXP
+Wocli score: 3056690
+Summary: About Titan Panel adds one or two information bars on the top and/or bottom of the screen and allows a framework for extensiv...
+[adupuis@localhost wocli] $ 
+```
+
+##### installed
+
+Display the list of installed addons on your computer.
+
+```
+[adupuis@localhost wocli] $ ./wocli.pl installed
+Here is the list of World of Warcraft addons, installed on your computer:
+- LibDBIcon-1.0 (r50-release)
+- LibGroupInSpecT (LibGroupInSpecT-1.1-1.1.0)
+- LibItemUpgradeInfo-1.0 (Release-60203-14)
+- LibQTip-1.0 (r176-release)
+- LibSharedMedia-3.0 (6.2.0)
+- LibSink-2.0 (r111-release)
+- LibToast-1.0 (6.2.0.3)
+[adupuis@localhost wocli] $ 
+```
