@@ -191,7 +191,7 @@ wow_dir             :  ./test/
 
 ##### info
 
-Display all the information available from Curse.com.
+Display all the information available from Curse.com on **one** addon (anything after the first argument to this command is going to be ignored.
 
 ```
 [adupuis@localhost wocli] $ ./wocli.pl info titan-panel
