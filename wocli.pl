@@ -9,6 +9,7 @@ use File::Path qw(make_path remove_tree);
 use IO::Uncompress::Bunzip2 qw(bunzip2 $Bunzip2Error) ;
 use XML::Simple qw(:strict);
 use Term::ANSIColor qw(:constants);
+use List::Util 1.33 'any';
 
 # Setting autoflush to immediate flush.
 $|++;
@@ -820,6 +821,67 @@ elsif($cmd eq 'info'){
 	}
 	else{
 		warning_print "There is no addons with '$ARGV[0]' as a shortname in the database.\nUse search to find addons and their shortnames.\n";
+	}
+}
+elsif($cmd eq 'detect'){
+	if( -e "$opt_wow_dir/Interface/AddOns/" ){
+		opendir(my $dh, "$opt_wow_dir/Interface/AddOns/") or die "Can't open directory $opt_wow_dir/Interface/AddOns/ for reading\n";
+		my %unique_dir = ();
+		while(readdir $dh) {
+			next if(/^\./);
+			debug_print "Found addon dir: $_\n";
+			$unique_dir{$_} = [];
+                }
+		closedir $dh;
+		foreach my $addon_shortname (keys(%addon_table)){
+			foreach my $dir ( keys(%unique_dir) ){
+				if(any { /$dir/ } @{$addon_table{$addon_shortname}->{Folders}} ){
+					push @{$unique_dir{$dir}}, $addon_shortname;
+					debug_print "Found a match for directory '$dir' => $addon_shortname\n";
+				}
+			}
+		}
+		debug_print Data::Dumper::Dumper( %unique_dir ),"\n";
+		my %unique_addon_list = ();
+		foreach my $dir ( keys(%unique_dir) ){
+			foreach my $addon_shortname (@{$unique_dir{$dir}}){
+				$unique_addon_list{$addon_shortname} = 1; 
+			}
+		}
+		my @finale_addon_list = ();
+		foreach my $addon_shortname ( keys %unique_addon_list ){
+			my $found_dirs = 0;
+			foreach my $dir ( @{$addon_table{$addon_shortname}->{Folders}} ) {
+				$found_dirs++ if( -e "$opt_wow_dir/Interface/AddOns/$dir" );
+			}
+			if( scalar( @{$addon_table{$addon_shortname}->{Folders}} ) == $found_dirs ){
+				debug_print "Found perfect match, adding $addon_shortname to the list.\n";
+				push @finale_addon_list, $addon_shortname;
+			}
+		}
+		debug_print "Here is the list of detected addons: ", join(', ', @finale_addon_list),"\n";
+		
+		warning_print "All detected addons are perfect matches, this means that they perfectly match the description (folder list) from Curse.com. Adding them to your installed database is safe and you can re-run anytime.\n\n";
+		
+		print "Following addons are going to be added to your installed database:\n",join(', ', @finale_addon_list),"\nIs that ok? (y/n) ";
+		my $answer =<STDIN>;
+		chomp($answer);
+		exit if( $answer =~ /^n/i);
+		
+		foreach my $addonToAdd (@finale_addon_list){
+			print "Adding:\t$addonToAdd"." "x(50- length($addonToAdd)).":\t";
+			if($addon_table{$addonToAdd}){
+				$installed_addon_table{$addonToAdd} = $addon_table{$addonToAdd};
+				print BOLD,GREEN,"added",RESET," ($installed_addon_table{$addonToAdd}->{Name} $installed_addon_table{$addonToAdd}->{Version}).\n";
+			}
+			else{
+				print BOLD,RED,"addition failed (addon is not in the database).\n",RESET;
+			}
+		}
+		writeInstalledCache();
+	}
+	else{
+		warning_print "Unable to detect addons because no addon directory in your World of Warcraft install. Path looked out: $opt_wow_dir/Interface/AddOns/\n";
 	}
 }
 else{
