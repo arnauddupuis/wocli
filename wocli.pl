@@ -814,6 +814,7 @@ elsif($cmd eq 'info'){
 		print BOLD,YELLOW,"Download Url: ",RESET, $addon_table{$ARGV[0]}->{DownloadUrl}, "\n";
 		print BOLD,YELLOW,"Folders: ",RESET, join(', ',@{$addon_table{$ARGV[0]}->{Folders}}), "\n";
 		print BOLD,YELLOW,"Wocli score: ",RESET, $addon_table{$ARGV[0]}->{Score}, "\n";
+		print BOLD,YELLOW,"Status: ",RESET, exists($installed_addon_table{$ARGV[0]}) ? BOLD.GREEN."installed".RESET : BOLD.RED."not installed".RESET , "\n" ;
 		print BOLD,YELLOW,"Summary: ",RESET, $addon_table{$ARGV[0]}->{Summary}, "\n";
 		
 	}
