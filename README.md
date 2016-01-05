@@ -17,6 +17,11 @@ It is still under heavy development, some things works:
 * install
 * update
 * add
+* remove
+* info
+* installed
+* showconfig
+* detect
 
 However, I can promise one thing: this Perl script is going to work and do the job. So if I get tired of this or loose my purpose (stop playing WoW ^^). You still have a working tool.
 
@@ -35,6 +40,7 @@ The following Perl modules are used, they should be part of the Perl distributio
 * Time::HiRes
 * XML::Simple
 * Term::ANSIColor
+* List::Util
 
 
 However, if you want to install system wide, you can do:
@@ -69,7 +75,7 @@ rm -f /usr/local/bin/wocli
 
 First, tell wocli where your Wordl of Warcraft install is (and build the cache at the same time):
 ```bash
-wocli.pl --wow-dir /your/path/to\ your/wow\ install --save buildcache
+wocli.pl --wow-dir /your/path/to\ your/wow\ --save buildcache
 ```
 
 Then you shoudl be able to install/update/add/search easily:
@@ -96,6 +102,31 @@ Install:        gathermate2                                       :     installe
 Install:        gathermate2_data                                  :     installed (GatherMate2_Data v29.4).
 
 ```
+
+You can ask wocli to detect all your addons automatically by running the ```detect``` command:
+
+```
+[adupuis@localhost wocli] $ ./wocli.pl detect
+WARNING: All detected addons are perfect matches, this means that they perfectly match the description (folder list) from Curse.com. Adding them to your installed database is safe and you can re-run anytime.
+
+Following addons are going to be added to your installed database:
+libdbicon-1-0, libsharedmedia-3-0, titan-panel-ranged-crit, libqtip-1-0, titan-panel-clan, libsink-2-0, titan-panel, libtoast-1-0, libitemupgradeinfo-1-0, ace3, libgroupinspect
+Is that ok? (y/n) y
+Adding: libdbicon-1-0                                     :     added (LibDBIcon-1.0 r50-release).
+Adding: libsharedmedia-3-0                                :     added (LibSharedMedia-3.0 6.2.0).
+Adding: titan-panel-ranged-crit                           :     added (Titan Panel [Ranged Crit] Titan Panel [Ranged Crit] ).
+Adding: libqtip-1-0                                       :     added (LibQTip-1.0 r176-release).
+Adding: titan-panel-clan                                  :     added (Titan Panel [Clan] r36).
+Adding: libsink-2-0                                       :     added (LibSink-2.0 r111-release).
+Adding: titan-panel                                       :     added (Titan Panel 5.6.19.60200).
+Adding: libtoast-1-0                                      :     added (LibToast-1.0 6.2.0.3).
+Adding: libitemupgradeinfo-1-0                            :     added (LibItemUpgradeInfo-1.0 Release-60203-15).
+Adding: ace3                                              :     added (Ace3 Release-r1134).
+Adding: libgroupinspect                                   :     added (LibGroupInSpecT LibGroupInSpecT-1.1-1.1.0).
+[adupuis@localhost wocli] $ 
+```
+
+You can re-run this command as many time as you like (although it might be absolutely useless, but will do no harm).
 
 ### Run
 
@@ -220,5 +251,31 @@ Here is the list of World of Warcraft addons, installed on your computer:
 - LibSharedMedia-3.0 (6.2.0)
 - LibSink-2.0 (r111-release)
 - LibToast-1.0 (6.2.0.3)
+[adupuis@localhost wocli] $ 
+```
+
+#### detect
+
+This command allows you to detect all installed addons quite safely by looking up the directories in Interface/AddOns/ and compare them to Curse.com database that contains the list of all folders for every addon.
+Then it is added to your installed database.
+
+```
+[adupuis@localhost wocli] $ ./wocli.pl detect
+WARNING: All detected addons are perfect matches, this means that they perfectly match the description (folder list) from Curse.com. Adding them to your installed database is safe and you can re-run anytime.
+
+Following addons are going to be added to your installed database:
+libdbicon-1-0, libsharedmedia-3-0, titan-panel-ranged-crit, libqtip-1-0, titan-panel-clan, libsink-2-0, titan-panel, libtoast-1-0, libitemupgradeinfo-1-0, ace3, libgroupinspect
+Is that ok? (y/n) y
+Adding: libdbicon-1-0                                     :     added (LibDBIcon-1.0 r50-release).
+Adding: libsharedmedia-3-0                                :     added (LibSharedMedia-3.0 6.2.0).
+Adding: titan-panel-ranged-crit                           :     added (Titan Panel [Ranged Crit] Titan Panel [Ranged Crit] ).
+Adding: libqtip-1-0                                       :     added (LibQTip-1.0 r176-release).
+Adding: titan-panel-clan                                  :     added (Titan Panel [Clan] r36).
+Adding: libsink-2-0                                       :     added (LibSink-2.0 r111-release).
+Adding: titan-panel                                       :     added (Titan Panel 5.6.19.60200).
+Adding: libtoast-1-0                                      :     added (LibToast-1.0 6.2.0.3).
+Adding: libitemupgradeinfo-1-0                            :     added (LibItemUpgradeInfo-1.0 Release-60203-15).
+Adding: ace3                                              :     added (Ace3 Release-r1134).
+Adding: libgroupinspect                                   :     added (LibGroupInSpecT LibGroupInSpecT-1.1-1.1.0).
 [adupuis@localhost wocli] $ 
 ```
