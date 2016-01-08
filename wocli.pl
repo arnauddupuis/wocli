@@ -824,7 +824,9 @@ elsif($cmd eq 'info'){
 	}
 }
 elsif($cmd eq 'detect'){
-	if( -e "$opt_wow_dir/Interface/AddOns/" ){
+	$opt_wow_dir =~ s/\\\s/ /g;
+	if( -e $opt_wow_dir.'/Interface/AddOns/' ){
+		print "Scanning your World of Warcraft installation...";
 		opendir(my $dh, "$opt_wow_dir/Interface/AddOns/") or die "Can't open directory $opt_wow_dir/Interface/AddOns/ for reading\n";
 		my %unique_dir = ();
 		while(readdir $dh) {
@@ -859,16 +861,17 @@ elsif($cmd eq 'detect'){
 				push @finale_addon_list, $addon_shortname;
 			}
 		}
+		print "done\n";
 		debug_print "Here is the list of detected addons: ", join(', ', @finale_addon_list),"\n";
 		
 		warning_print "All detected addons are perfect matches, this means that they perfectly match the description (folder list) from Curse.com. Adding them to your installed database is safe and you can re-run anytime.\n\n";
 		
-		print "Following addons are going to be added to your installed database:\n",join(', ', @finale_addon_list),"\nIs that ok? (y/n) ";
+		print "Following addons are going to be added to your installed database:\n",join(', ', sort @finale_addon_list),"\nIs that ok? (y/n) ";
 		my $answer =<STDIN>;
 		chomp($answer);
 		exit if( $answer =~ /^n/i);
 		
-		foreach my $addonToAdd (@finale_addon_list){
+		foreach my $addonToAdd (sort @finale_addon_list){
 			print "Adding:\t$addonToAdd"." "x(50- length($addonToAdd)).":\t";
 			if($addon_table{$addonToAdd}){
 				$installed_addon_table{$addonToAdd} = $addon_table{$addonToAdd};
