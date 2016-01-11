@@ -816,7 +816,8 @@ elsif($cmd eq 'info'){
 	}
 }
 elsif($cmd eq 'detect'){
-	$opt_wow_dir =~ s/\\(\s+)/$1/g;
+# 	$opt_wow_dir =~ s/\\(\s+)/$1/g;
+	$opt_wow_dir =~ s/\\//g;
 	if( -e $opt_wow_dir.'/Interface/AddOns/' ){
 		print "Scanning your World of Warcraft installation...";
 		opendir(my $dh, "$opt_wow_dir/Interface/AddOns/") or die "Can't open directory $opt_wow_dir/Interface/AddOns/ for reading\n";
