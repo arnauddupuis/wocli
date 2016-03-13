@@ -2,12 +2,16 @@
 
 prefix=/usr/local
 
-all: install
+all: build
 
-install:
-	install -m 0755 wocli.pl $(prefix)/bin
-	ln -s $(prefix)/bin/wocli.pl $(prefix)/bin/wocli
+build:
+	cp wocli.pl wocli
+
+install: build
+	install -m 0755 wocli $(prefix)/bin
 	
 uninstall:
-	rm -f $(prefix)/bin/wocli.pl
 	rm -f $(prefix)/bin/wocli
+
+clean:
+	rm wocli

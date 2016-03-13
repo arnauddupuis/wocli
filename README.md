@@ -37,7 +37,7 @@ The following Perl modules are used, they should be part of the Perl distributio
 * Data::Dumper
 * Getopt::Long
 * File::Path 
-* Time::HiRes
+* IO::Uncompress::Bunzip2
 * XML::Simple
 * Term::ANSIColor
 * List::Util
