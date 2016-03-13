@@ -63,7 +63,7 @@ Found 1 partial name results.
 
 ## Uninstall
 
-If you did install wocli you can uninstall it:
+If you did install wocli you can uninstall it by running:
 ```bash
 [adupuis@localhost wocli] $ sudo make uninstall
 rm -f /usr/local/bin/wocli.pl
@@ -73,7 +73,7 @@ rm -f /usr/local/bin/wocli
 
 ### Quick first run
 
-First, tell wocli where your Wordl of Warcraft install is (and build the cache at the same time):
+First, tell wocli where your World of Warcraft install is (and build the cache at the same time):
 ```bash
 wocli.pl --wow-dir /your/path/to\ your/wow\ --save buildcache
 ```
