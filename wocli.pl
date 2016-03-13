@@ -549,6 +549,7 @@ if($cmd eq 'install') {
 			foreach my $dep_type ('Optional','Required','Embedded'){
 				foreach my $dep ( @{ $addon_table{$addonToInstall}->{Dependencies}->{$dep_type} } ){
 					next if($dep eq $WOCLI_NONE);
+					next if(exists($installed_addon_table{$dep}) && $installed_addon_table{$dep}->{Version} >= $addon_table{$dep}->{Version});
 					push @{$installation{$dep_type}}, $dep; 
 				}
 			}
