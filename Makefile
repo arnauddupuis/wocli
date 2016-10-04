@@ -4,9 +4,8 @@ prefix=/usr/local
 
 all: install
 
-install:
-	install -m 0755 wocli.pl $(prefix)/bin
-	ln -s $(prefix)/bin/wocli.pl $(prefix)/bin/wocli
+install: uninstall
+	install -m 0755 wocli $(prefix)/bin/
 	
 uninstall:
 	rm -f $(prefix)/bin/wocli.pl
