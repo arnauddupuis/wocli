@@ -12,18 +12,8 @@ Please note it's work in progress. Feel free to help.
 
 ## Status
 
-It is still under heavy development, some things works:
-* search
-* install
-* update
-* add
-* remove
-* info
-* installed
-* showconfig
-* detect
-
-However, I can promise one thing: this Perl script is going to work and do the job. So if I get tired of this or loose my purpose (stop playing WoW ^^). You still have a working tool.
+Wocli is still under development, you can find the backlog here:
+https://github.com/arnauddupuis/wocli/issues
 
 ## Help
 
@@ -34,6 +24,7 @@ Here is a basic help for this little program.
 No need too, just run the script from the Github repo.
 The following Perl modules are used, they should be part of the Perl distribution on your Linux box:
 * LWP::UserAgent
+* LWP::Protocol::https
 * Data::Dumper
 * Getopt::Long
 * File::Path 
@@ -279,3 +270,14 @@ Adding: ace3                                              :     added (Ace3 Rele
 Adding: libgroupinspect                                   :     added (LibGroupInSpecT LibGroupInSpecT-1.1-1.1.0).
 [adupuis@localhost wocli] $ 
 ```
+
+### wb
+
+This command is the WoW Battle mode (or who's best), it compares 2 addons and tells you wich one is the most praised by the curse.com community (the score is calculated as following: (DownloadCount/2+InstallCount*1.5+Likes*20)/4, this score is giving more importance to feedbacks from users that actually uses the addons).
+
+```
+[adupuis@localhost wocli]$ ./wocli wb auctioneer auctionator
+The Curse.com community prefers auctioneer
+```
+
+The goal of this feature is to help you decide wich addon to choose between 2 addons.

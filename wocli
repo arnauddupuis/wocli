@@ -30,7 +30,7 @@ my %config = (
 	db_ttl => 7200,
 );
 my $DEBUG=0;
-my $VERSION="0.6.0";
+my $VERSION="0.7.0";
 my $WOCLI_NONE = 'wocli-none';
 my $DB_VERSION=3;
 my $last_cache_build=-1;
@@ -102,7 +102,7 @@ sub loadConfig {
 sub unzip {
 	my ($file, $dest) = @_;
 	debug_print "2>&1 $opt_unzip '$file' -d '$dest' >> $config{config_dir}/unzip.log\n";
-	my $status = system("2>&1 $opt_unzip -o '$file' -d $dest >> '$config{config_dir}/unzip.log'");
+	my $status = system("2>&1 $opt_unzip -o '$file' -d '$dest' >> '$config{config_dir}/unzip.log'");
 	if($status == 0){
 		return (1, "$file unzipped successfully.");
 	}
@@ -131,6 +131,9 @@ sub installAddon {
 					# TODO: Handle errors like said here: http://search.cpan.org/~riche/File-Path-2.11/lib/File/Path.pm#ERROR_HANDLING
 					make_path("$config{config_dir}/cache") unless(-e "$config{config_dir}/cache");
 					$response = $ua->get($url,':content_file'=>"$config{config_dir}/cache/$file");
+					unless($response->is_success){
+						return (0,"Installation failed due to download issue: ".$response->status_line."\n");
+					}
 					my ($status,$msg) = unzip("$config{config_dir}/cache/$file","$opt_wow_dir/Interface/AddOns/");
 					if($status){
 						$installed_addon_table{$addon_shortname} = $addon_table{$addon_shortname};
@@ -879,6 +882,20 @@ elsif($cmd eq 'detect'){
 	}
 	else{
 		warning_print "Unable to detect addons because no addon directory in your World of Warcraft install. Path looked out: $opt_wow_dir/Interface/AddOns/\n";
+	}
+}
+elsif($cmd eq 'wb'){
+	my $addon_1 = shift(@ARGV);
+	my $addon_2 = shift(@ARGV);
+	if(exists($addon_table{$addon_1}) && exists($addon_table{$addon_2}) ){
+		debug_print "Score $addon_1: $addon_table{$addon_1}->{Score}\n";
+		debug_print "Score $addon_2: $addon_table{$addon_2}->{Score}\n";
+		my $result = ($addon_table{$addon_1}->{Score} >= $addon_table{$addon_2}->{Score}) && $addon_1 || $addon_2;
+		print "The Curse.com community prefers ",BOLD,GREEN,$result,RESET,"\n";
+	}
+	else{
+		warning_print "$addon_1 doesn't exists in the addon database.\n" unless(exists($addon_table{$addon_1}));
+		warning_print "$addon_2 doesn't exists in the addon database.\n" unless(exists($addon_table{$addon_2}));
 	}
 }
 else{
