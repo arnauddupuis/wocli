@@ -542,6 +542,7 @@ die "Wocli v$VERSION.\ncommand required: install, update, remove, search, clean,
 my $cmd = shift(@ARGV);
 debug_print "Self is: $^X $0\n";
 debug_print "COMMAND: $cmd\n";
+# debug_print "Data structure for gatherer:\n",Data::Dumper::Dumper($addon_table{'gatherer'}),"\n";
 
 if($cmd eq 'install') {
 	updateCacheIfNeeded();
@@ -643,7 +644,7 @@ elsif($cmd eq 'add'){
 elsif($cmd eq 'update'){
 	updateCacheIfNeeded();
 	debug_print "ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc\n";
-	my @toc_files = split(/\n/,`ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc`);
+	my @toc_files = split(/\n/,`ls -1 '$opt_wow_dir'/Interface/AddOns/*/*.toc`);
 	my @update_list = ();
 	my %updatable = %installed_addon_table;
 	foreach my $tf (@toc_files){
@@ -897,6 +898,9 @@ elsif($cmd eq 'wb'){
 		warning_print "$addon_1 doesn't exists in the addon database.\n" unless(exists($addon_table{$addon_1}));
 		warning_print "$addon_2 doesn't exists in the addon database.\n" unless(exists($addon_table{$addon_2}));
 	}
+}
+elsif($cmd eq 'recomend'){
+	# TODO: implement
 }
 else{
 	die "Unknown command: $cmd\n";
