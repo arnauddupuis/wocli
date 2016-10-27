@@ -101,3 +101,105 @@
 	<WebSiteURL>http://www.curse.com/addons/wow/gatherer</WebSiteURL>
 </CAddOn>
 </ArrayOfCAddOn>
+
+
+
+<CAddOn>
+	<Authors>
+		<CAddOnAuthor>
+			<Name>Esamynn</Name>
+			<Url>http://www.curse.com/members/Esamynn.aspx</Url>
+		</CAddOnAuthor>
+	</Authors>
+	<Categories>
+		<CAddOnCategory>
+			<Id>103</Id>
+			<Name>Archaeology</Name>
+			<URL>http://www.curse.com/addons/wow/category/archaeology</URL>
+		</CAddOnCategory>
+		<CAddOnCategory>
+			<Id>49</Id>
+			<Name>Herbalism</Name>
+			<URL>http://www.curse.com/addons/wow/category/herbalism</URL>
+		</CAddOnCategory>
+		<CAddOnCategory>
+			<Id>11</Id>
+			<Name>Map &amp; Minimap</Name>
+			<URL>http://www.curse.com/addons/wow/category/map-minimap</URL>
+		</CAddOnCategory>
+		<CAddOnCategory>
+			<Id>52</Id>
+			<Name>Mining</Name>
+			<URL>http://www.curse.com/addons/wow/category/mining</URL>
+		</CAddOnCategory>
+	</Categories>
+	<CategorySection>
+		<ExtraIncludePattern>(?i)^[^/\\]+[/\\]Bindings\.xml$</ExtraIncludePattern>
+		<GameID>1</GameID>
+		<ID>1</ID>
+		<InitialInclusionPattern>(?i)^([^/]+)[\\/]\1\.toc$</InitialInclusionPattern>
+		<Name>Addons</Name>
+		<PackageType>Folder</PackageType>
+		<Path>interface\addons</Path>
+	</CategorySection>
+	<CommentCount>4026</CommentCount>
+	<DefaultFileId>944471</DefaultFileId>
+	<DonationUrl>https://www.paypal.com/cgi-bin/webscr?hosted_button_id=HAG2XK5SYKXAW&amp;amp;item_name=Gatherer+%28from+Curse.com%29&amp;amp;cmd=_s-xclick</DonationUrl>
+	<DownloadCount>13641105</DownloadCount>
+	<ExternalUrl i:nil="true"/>
+	<GameId>1</GameId>
+	<IconId>1</IconId>
+	<Id>32</Id>
+	<InstallCount>1492791</InstallCount>
+	<LatestFiles>
+		<CAddOnFile>
+			<AlternateFileId>0</AlternateFileId>
+			<Dependencies>
+				<CAddOnFileDependency>
+					<AddOnId>26799</AddOnId>
+					<Type>Embedded</Type>
+				</CAddOnFileDependency>
+			</Dependencies>
+			<DownloadURL>http://addons.curse.cursecdn.com/files/944/471/Gatherer-7.0.1.zip</DownloadURL>
+			<FileDate>2016-09-14T07:31:37</FileDate>
+			<FileName>7.0.1</FileName>
+			<FileStatus>Normal</FileStatus>
+			<GameVersion xmlns:a="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
+				<a:string>7.0.3</a:string>
+			</GameVersion>
+			<Id>944471</Id>
+			<IsAlternate>false</IsAlternate>
+			<IsAvailable>true</IsAvailable>
+			<Modules>
+				<CAddOnModule>
+					<Fingerprint>435317973</Fingerprint>
+					<Foldername>SlideBar</Foldername>
+				</CAddOnModule>
+				<CAddOnModule>
+					<Fingerprint>1125408629</Fingerprint>
+					<Foldername>Gatherer</Foldername>
+				</CAddOnModule>
+				<CAddOnModule>
+					<Fingerprint>2503036801</Fingerprint>
+					<Foldername>Gatherer_HUD</Foldername>
+				</CAddOnModule>
+				<CAddOnModule>
+					<Fingerprint>2483110877</Fingerprint>
+					<Foldername>!Swatter</Foldername>
+				</CAddOnModule>
+			</Modules>
+			<PackageFingerprint>4290383816</PackageFingerprint>
+			<ReleaseType>Release</ReleaseType>
+		</CAddOnFile>
+	</LatestFiles>
+	<Likes>156</Likes>
+	<Name>Gatherer</Name>
+	<PackageType>Folder</PackageType>
+	<PrimaryAuthorName>Esamynn</PrimaryAuthorName>
+	<PrimaryCategoryId>11</PrimaryCategoryId>
+	<Rating>0</Rating>
+	<Stage>Release</Stage>
+	<Status>Normal</Status>
+	<Summary>Helps track the closest plants, deposits and treasure locations on your minimap.</Summary>
+	<WebSiteURL>http://www.curse.com/addons/wow/gatherer</WebSiteURL>
+</CAddOn>
