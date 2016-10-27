@@ -1,0 +1,63 @@
+Current data structure:
+=======================
+
+[debug] Data structure for gatherer:
+$VAR1 = {
+          'Dependencies' => {
+                              'Optional' => [
+                                              'wocli-none'
+                                            ],
+                              'Embedded' => [
+                                              'wocli-none'
+                                            ],
+                              'Required' => [
+                                              'wocli-none'
+                                            ]
+                            },
+          'Version' => '7.0.1',
+          'Summary' => 'Helps track the closest plants, deposits and treasure locations on your minimap.',
+          'DownloadUrl' => 'http://addons.curse.cursecdn.com/files/944/471/Gatherer-7.0.1.zip',
+          'Score' => '2266721',
+          'Id' => '32',
+          'Folders' => [
+                         'SlideBar',
+                         'Gatherer',
+                         'Gatherer_HUD',
+                         '!Swatter'
+                       ],
+          'Name' => 'Gatherer'
+        };
+
+
+0.7.0 data structure:
+=====================
+
+$VAR1 = {
+          'Dependencies' => {
+                              'Optional' => [
+                                              'wocli-none'
+                                            ],
+                              'Embedded' => [
+                                              'wocli-none'
+                                            ],
+                              'Required' => [
+                                              'wocli-none'
+                                            ]
+                            },
+          'Categories' =>  
+          'Version' => '7.0.1',
+          'Summary' => 'Helps track the closest plants, deposits and treasure locations on your minimap.',
+          'FullDescription' => 'Whatever goes here'
+          'DownloadUrl' => 'http://addons.curse.cursecdn.com/files/944/471/Gatherer-7.0.1.zip',
+          'Score' => '2266721',
+          'Id' => '32',
+          'Folders' => [
+                         'SlideBar',
+                         'Gatherer',
+                         'Gatherer_HUD',
+                         '!Swatter'
+                       ],
+          'Name' => 'Gatherer'
+        };
+
+
