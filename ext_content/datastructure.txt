@@ -59,5 +59,7 @@ $VAR1 = {
                        ],
           'Name' => 'Gatherer'
         };
+        
+The 'wocli-none' value is not used anymore.
 
 

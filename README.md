@@ -32,6 +32,7 @@ The following Perl modules are used, they should be part of the Perl distributio
 * XML::Simple
 * Term::ANSIColor
 * List::Util
+* JSON::XS
 
 
 However, if you want to install system wide, you can do:
