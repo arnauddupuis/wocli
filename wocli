@@ -721,6 +721,7 @@ elsif($cmd eq 'add'){
 		print "Adding:\t$addonToAdd"." "x(50- length($addonToAdd)).":\t";
 		if($addon_table{$addonToAdd}){
 			$installed_addon_table{$addonToAdd} = $addon_table{$addonToAdd};
+			$installed_addon_table{$addonToAdd}->{Version} = 0;
 			print BOLD,GREEN,"added",RESET," ($installed_addon_table{$addonToAdd}->{Name} $installed_addon_table{$addonToAdd}->{Version}).\n";
 		}
 		else{
@@ -728,13 +729,14 @@ elsif($cmd eq 'add'){
 		}
 	}
 	writeInstalledCache();
+	warning_print "Added addon(s) will be updated next time ";
 }
 elsif($cmd eq 'update'){
 	updateCacheIfNeeded();
 	debug_print "ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc\n";
 	my $norm_dir = $opt_wow_dir;
 	$norm_dir =~ s/\\//g;
-	my @toc_files = split(/\n/,`2>ls -1 '$opt_wow_dir'/Interface/AddOns/*/*.toc`);
+	my @toc_files = split(/\n/,`2>/dev/null ls -1 '$opt_wow_dir'/Interface/AddOns/*/*.toc`);
 	my @update_list = ();
 	my %updatable = %installed_addon_table;
 	foreach my $tf (@toc_files){
