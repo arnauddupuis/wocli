@@ -626,6 +626,95 @@ if($cmd eq 'install') {
 	}
 	writeInstalledCache();
 }
+if($cmd eq 'reinstall') {
+	updateCacheIfNeeded();
+	my %installation = (Optional => [], Required => [], Embedded => [], Addons => [], NotFound => []);
+	my @listToTinstall= ();
+	if(scalar(@ARGV) > 0){
+		@listToTinstall = @ARGV;
+	}
+	else{
+		@listToTinstall = sort keys %installed_addon_table;
+	}
+	foreach my $addonToReInstall (@listToTinstall){
+		if( exists( $addon_table{$addonToReInstall} ) ){
+			push @{$installation{Addons}}, $addonToReInstall;
+			foreach my $dep_type ('Optional','Required','Embedded'){
+				foreach my $dep ( @{ $addon_table{$addonToReInstall}->{Dependencies}->{$dep_type} } ){
+					next if($dep eq $WOCLI_NONE);
+					push @{$installation{$dep_type}}, $dep; 
+				}
+			}
+		}
+		else {
+			push @{$installation{NotFound}}, $addonToReInstall;
+		}
+	}
+	
+	print "The following addons will be ".BOLD.GREEN."re-installed".RESET.":\n",BOLD,GREEN,join(RESET.", ".BOLD.GREEN,@{$installation{Addons}}),RESET,"\n\n";
+	my @menu = ("What do you want to do?\n");
+	if( scalar( @{$installation{Required}} ) > 0 ){
+		print "The following ".BOLD.YELLOW."dependencies are required".RESET." and will be re-installed as well:\n",BOLD,YELLOW,join(RESET.", ".BOLD.YELLOW,@{$installation{Required}}),RESET,"\n\n";
+		push @menu,"R) Re-install addons + required dependencies.\n";
+	}
+	else{
+		push @menu,"A) Re-install addons without installing any optional dependencies.\n";
+	}
+	
+	if( scalar( @{$installation{Optional}} ) > 0 ){
+		print "The following ".BOLD.CYAN."dependencies are optional".RESET." and SHOULD be re-installed:\n",BOLD,CYAN,join(RESET.", ".BOLD.CYAN,@{$installation{Optional}}),RESET,"\n\n";
+		push @menu,"O) Re-install addons + required dependencies (if any) + optional dependencies.\n";
+	}
+	
+	if( scalar( @{$installation{Embedded}} ) > 0 ){
+		print "The following ".BOLD.MAGENTA."dependencies are nice to have".RESET." and MAY be re-installed:\n",BOLD,MAGENTA,join(RESET.", ".BOLD.MAGENTA,@{$installation{Embedded}}),RESET,"\n\n";
+		push @menu,"E) Re-install addons + required dependencies (if any) + optional dependencies (if any) + nice to have dependencies.\n";
+	}
+	
+	push @menu, "N) Do nothing and exit.\n> ";
+	print join("",@menu);
+	my $answer = <STDIN>;
+	chomp($answer);
+	exit(1) if($answer =~ /^n/i);
+	my @addonsToInstall = ();
+	if( $answer =~ /^A/i){
+		debug_print "Adding addons to the install stack.\n";
+		foreach my $val (@{$installation{Addons}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	elsif( $answer =~ /^R/i){
+		debug_print "Adding Required dependencies to the install stack.\n";
+		foreach my $val (@{$installation{Addons}},@{$installation{Required}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	elsif( $answer =~ /^O/i){
+		debug_print "Adding Optional dependencies to the install stack.\n";
+		foreach my $val (@{$installation{Addons}},@{$installation{Required}},@{$installation{Optional}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	elsif( $answer =~ /^E/i){
+		debug_print "Adding Embedded dependencies to the install stack.\n";
+		foreach my $val (@{$installation{Addons}},@{$installation{Required}},@{$installation{Optional}},@{$installation{Embedded}}){
+			push @addonsToInstall, $val unless grep{$_ eq $val} @addonsToInstall ;
+		}
+	}
+	
+	
+	foreach my $addonToInstall (sort @addonsToInstall){
+		print "Install:\t$addonToInstall"." "x(50- length($addonToInstall)).":\t";
+		my ($status,$msg) = installAddon($addonToInstall);
+		if($status){
+			print BOLD,GREEN,"installed",RESET," ($installed_addon_table{$addonToInstall}->{Name} $installed_addon_table{$addonToInstall}->{Version}).\n";
+		}
+		else{
+			print BOLD,RED,"installation failed ($msg).\n",RESET;
+		}
+	}
+	writeInstalledCache();
+}
 elsif($cmd eq 'add'){
 	updateCacheIfNeeded();
 	foreach my $addonToAdd (@ARGV){

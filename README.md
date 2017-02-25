@@ -120,6 +120,89 @@ Adding: libgroupinspect                                   :     added (LibGroupI
 
 You can re-run this command as many time as you like (although it might be absolutely useless, but will do no harm).
 
+IMPORTANT: As pointed out by @khogeland in issue #11 the detect function assume all of your detected addons are up-to-date. As it is not always the case you shuld then run ```wocli reinstall```. This will reinstall all addons and optionally their dependencies.
+
+```
+[adupuis@localhost wocli]$ ./wocli reinstall
+The following addons will be re-installed:
+ace-gui-3-0-shared-media-widgets, ace3, auctionator, auto-bar, bagnon, bartender4, callbackhandler, classhandler-1-0, conslegion, customtutorials-1-0, dbm-pvp, deadly-boss-mods, deadly-boss-mods-wod, embedhandler, garrison-mission-manager, gatherer, gathermate2, gathermate2_data, gathermate_sharing, gladius, glamor, handynotes, handynotes_legionrarestreasures, handynotes_legiontreasures, handynotes_suramarleylines, handynotes_suramartelemancy, herebedragons, libactionbutton-1-0, libbabble-boss-3-0, libbabble-creaturetype-3-0, libbabble-subzone-3-0, libbuttonglow-1-0, libcompress, libdbicon-1-0, libdualspec-1-0, libkeybound-1-0, libqtip-1-0, libsharedmedia-3-0, libsink-2-0, libttscan-1, libwindow-1-1, master-plan, postal, rarity, scrap, spartan-ui, titan-currtrack, titan-panel, titan-panel-currencies-multi, titanap, titanpanel-recommended-zone, titanrep, titantreasury, unfit, worldquestgroupfinder
+
+The following dependencies are required and will be re-installed as well:
+embedhandler, embedhandler, deadly-boss-mods, deadly-boss-mods, gathermate2, bartender4, titan-panel, glamor, titan-panel
+
+The following dependencies are optional and SHOULD be re-installed:
+libttscan-1, addon-loader, glamor
+
+The following dependencies are nice to have and MAY be re-installed:
+ace3, libsharedmedia-3-0, callbackhandler, ace3, unfit, ace3, libkeybound-1-0, callbackhandler, libdbicon-1-0, libwindow-1-1, libdualspec-1-0, libactionbutton-1-0, libbuttonglow-1-0, libsharedmedia-3-0, libchatanims, liblatency, ace3, herebedragons, ace3, ace3, herebedragons, callbackhandler, callbackhandler, libbuttonglow-1-0, ace3, ace3, ace-gui-3-0-shared-media-widgets, libbabble-boss-3-0, libbabble-creaturetype-3-0, libcompress, libsharedmedia-3-0, libsink-2-0, libqtip-1-0, libdbicon-1-0, libbabble-subzone-3-0, herebedragons, embedhandler, classhandler-1-0, customtutorials-1-0, unfit, ace3, libdualspec-1-0, ace3, libsharedmedia-3-0, libqtip-1-0
+
+What do you want to do?
+R) Re-install addons + required dependencies.
+O) Re-install addons + required dependencies (if any) + optional dependencies.
+E) Re-install addons + required dependencies (if any) + optional dependencies (if any) + nice to have dependencies.
+N) Do nothing and exit.
+> E
+Install:        ace-gui-3-0-shared-media-widgets                  :     installed (AceGUI-3.0-SharedMediaWidgets r57-release).
+Install:        ace3                                              :     installed (Ace3 Release-r1151).
+Install:        addon-loader                                      :     installed (AddonLoader r140-release).
+Install:        auctionator                                       :     installed (Auctionator Auctionator 4.0.16).
+Install:        auto-bar                                          :     installed (AutoBar AutoBar_7.1.5.02.zip).
+Install:        bagnon                                            :     installed (Bagnon 7.1.1).
+Install:        bartender4                                        :     installed (Bartender4 4.7.6).
+Install:        callbackhandler                                   :     installed (CallbackHandler-1.0 1.0.6.70000).
+Install:        classhandler-1-0                                  :     installed (ClassHandler-1.0 1).
+Install:        conslegion                                        :     installed (ConsLegion ConsLegion v1.28).
+Install:        customtutorials-1-0                               :     installed (CustomTutorials-2.0 5).
+Install:        dbm-pvp                                           :     installed (Deadly Boss Mods - PvP Mods DBM-PvP-r59).
+Install:        deadly-boss-mods                                  :     installed (Deadly Boss Mods 7.1.15).
+Install:        deadly-boss-mods-wod                              :     installed (Deadly Boss Mods - Warlords of Draenor mods DBM-WoD-r10).
+Install:        embedhandler                                      :     installed (EmbedHandler-1.0 4).
+Install:        garrison-mission-manager                          :     installed (Garrison Mission Manager v55).
+Install:        gatherer                                          :     installed (Gatherer 7.0.4).
+Install:        gathermate2                                       :     installed (GatherMate2 1.39).
+Install:        gathermate2_data                                  :     installed (GatherMate2_Data v30.1).
+Install:        gathermate_sharing                                :     installed (GatherMate_Sharing v1.10).
+Install:        gladius                                           :     installed (Gladius 5.1.1).
+Install:        glamor                                            :     installed (Glamour Release 1.4.4).
+Install:        handynotes                                        :     installed (HandyNotes v1.4.12).
+Install:        handynotes_legionrarestreasures                   :     installed (Handynotes_LegionRares&Treasures v1.01b).
+Install:        handynotes_legiontreasures                        :     installed (HandyNotes: Legion Treasures v10).
+Install:        handynotes_suramarleylines                        :     installed (HandyNotes: Suramar Leylines v1).
+Install:        handynotes_suramartelemancy                       :     installed (HandyNotes: Suramar Telemancy v5).
+Install:        herebedragons                                     :     installed (HereBeDragons-1.0 1.17-release).
+Install:        libactionbutton-1-0                               :     installed (LibActionButton-1.0 0.29.1).
+Install:        libbabble-boss-3-0                                :     installed (LibBabble-Boss-3.0 7.0-release4).
+Install:        libbabble-creaturetype-3-0                        :     installed (LibBabble-CreatureType-3.0 7.0-release1).
+Install:        libbabble-subzone-3-0                             :     installed (LibBabble-SubZone-3.0 7.1-release2).
+Install:        libbuttonglow-1-0                                 :     installed (LibButtonGlow-1.0 1.2.6).
+Install:        libchatanims                                      :     installed (LibChatAnims r28-release).
+Install:        libcompress                                       :     installed (LibCompress r76-release).
+Install:        libdbicon-1-0                                     :     installed (LibDBIcon-1.0 r56-release).
+Install:        libdualspec-1-0                                   :     installed (LibDualSpec-1.0 v1.13).
+Install:        libkeybound-1-0                                   :     installed (LibKeyBound-1.0 r104 release).
+Install:        liblatency                                        :     installed (LibLatency r15-release).
+Install:        libqtip-1-0                                       :     installed (LibQTip-1.0 r178-release).
+Install:        libsharedmedia-3-0                                :     installed (LibSharedMedia-3.0 7.1.0).
+Install:        libsink-2-0                                       :     installed (LibSink-2.0 r120-release).
+Install:        libttscan-1                                       :     installed (LibTTScan-1.0  v4).
+Install:        libwindow-1-1                                     :     installed (LibWindow-1.1 r15-70000).
+Install:        master-plan                                       :     installed (Master Plan 0.105).
+Install:        postal                                            :     installed (Postal v3.5.8).
+Install:        rarity                                            :     installed (Rarity r585a-release).
+Install:        scrap                                             :     installed (Scrap (Junk Seller) 13.4).
+Install:        spartan-ui                                        :     installed (SpartanUI 4.3.2-R10).
+Install:        titan-currtrack                                   :     installed (Titan [CurrencyTracker] (+Glamour) Release 1.3.1 for WoW 6.0.3).
+Install:        titan-panel                                       :     installed (Titan Panel 5.10.5.70100).
+Install:        titan-panel-currencies-multi                      :     installed (Titan Panel [Currencies] Multi v5.14c).
+Install:        titanap                                           :     installed (Titan Panel [Melee Attack Power] Titan Panel [Melee Attack Power] ).
+Install:        titanpanel-recommended-zone                       :     installed (TitanPanel [Recommended Zone] TPRecZone 6.0.0.0).
+Install:        titanrep                                          :     installed (Titan [Reputation] (+Glamour) TitanReputation-release-3.8.8.zip).
+Install:        titantreasury                                     :     installed (Titan Panel [Treasury] r27).
+Install:        unfit                                             :     installed (Unfit-1.0 3).
+Install:        worldquestgroupfinder                             :     installed (World Quest Group Finder 0.21.2).
+[adupuis@localhost wocli]$
+```
+
 ### Run
 
 Here is a list of the commands and options you can use.
@@ -139,6 +222,34 @@ Here is a list of the commands and options you can use.
 ##### install
 
 Install addons, takes a list of addons shortnames in parameters. It's going to install all mandatory dependencies and ask you about the optional dependencies.
+
+##### reinstall
+
+Re-install addons without taking their version number in consideration. This command will reinstall all addons and there dependencies wether they are up-to-date or not.
+It takes nothing or a list of addons shortnames in parameters. It's going to install all mandatory dependencies and ask you about the optional dependencies.
+If called without arguments, it will reinstall all addons. If called with a list of addons in parameters it will only reinstall the listed addons and their dependencies.
+
+```
+[adupuis@localhost wocli]$ ./wocli reinstall scrap
+The following addons will be re-installed:
+scrap
+
+The following dependencies are nice to have and MAY be re-installed:
+embedhandler, classhandler-1-0, customtutorials-1-0, unfit
+
+What do you want to do?
+A) Re-install addons without installing any optional dependencies.
+E) Re-install addons + required dependencies (if any) + optional dependencies (if any) + nice to have dependencies.
+N) Do nothing and exit.
+> E
+Install:        classhandler-1-0                                  :     installed (ClassHandler-1.0 1).
+Install:        customtutorials-1-0                               :     installed (CustomTutorials-2.0 5).
+Install:        embedhandler                                      :     installed (EmbedHandler-1.0 4).
+Install:        scrap                                             :     installed (Scrap (Junk Seller) 13.4).
+Install:        unfit                                             :     installed (Unfit-1.0 3).
+[adupuis@localhost wocli]$
+```
+
 
 ##### update
 
