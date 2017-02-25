@@ -120,7 +120,7 @@ Adding: libgroupinspect                                   :     added (LibGroupI
 
 You can re-run this command as many time as you like (although it might be absolutely useless, but will do no harm).
 
-IMPORTANT: As pointed out by @khogeland in issue #11 the detect function assume all of your detected addons are up-to-date. As it is not always the case you shuld then run ```wocli reinstall```. This will reinstall all addons and optionally their dependencies.
+IMPORTANT: As pointed out by [@khogeland](https://github.com/khogeland) in issue [#11](https://github.com/arnauddupuis/wocli/issues/11) the detect function assume all of your detected addons are up-to-date. As it is not always the case you shuld then run ```wocli reinstall```. This will reinstall all addons and optionally their dependencies.
 
 ```
 [adupuis@localhost wocli]$ ./wocli reinstall
