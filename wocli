@@ -626,7 +626,7 @@ if($cmd eq 'install') {
 	}
 	writeInstalledCache();
 }
-if($cmd eq 'reinstall') {
+elsif($cmd eq 'reinstall') {
 	updateCacheIfNeeded();
 	my %installation = (Optional => [], Required => [], Embedded => [], Addons => [], NotFound => []);
 	my @listToTinstall= ();
@@ -734,7 +734,7 @@ elsif($cmd eq 'update'){
 	debug_print "ls -1 $opt_wow_dir/Interface/AddOns/*/*.toc\n";
 	my $norm_dir = $opt_wow_dir;
 	$norm_dir =~ s/\\//g;
-	my @toc_files = split(/\n/,`ls -1 '$opt_wow_dir'/Interface/AddOns/*/*.toc`);
+	my @toc_files = split(/\n/,`2>ls -1 '$opt_wow_dir'/Interface/AddOns/*/*.toc`);
 	my @update_list = ();
 	my %updatable = %installed_addon_table;
 	foreach my $tf (@toc_files){
