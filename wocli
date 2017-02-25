@@ -466,7 +466,7 @@ sub removeAddon {
 }
 
 sub showVersion {
-	print BOLD,GREEN,"wocli",RESET," version ",BOLD,YELLOW,$VERSION,RESET,"\n\nThanks for your support!\n\n";
+	print BOLD,GREEN,"wocli",RESET," version ",BOLD,$VERSION,RESET,"\n\nThanks for your support!\n\n";
 	exit(0);
 }
 
