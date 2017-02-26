@@ -429,7 +429,7 @@ sub removeAddon {
 				if( -e "$opt_wow_dir/Interface/AddOns/$tmp_folder" && -d "$opt_wow_dir/Interface/AddOns/$tmp_folder" ) {
 					debug_print "OK\n";
 					debug_print "Removing '$opt_wow_dir/Interface/AddOns/$tmp_folder'\n";
-					if( system("2>&1 rm -rf '$opt_wow_dir/Interface/AddOns/$tmp_folder' >> $config{config_dir}/error.log") == 0 ){
+					if( system("2>&1 rm -rf '$opt_wow_dir/Interface/AddOns/$tmp_folder' >> $config{config_dir}/error.log") == 0 && ! -e "$opt_wow_dir/Interface/AddOns/$tmp_folder" ){
 						debug_print "'$opt_wow_dir/Interface/AddOns/$tmp_folder' removed.\n";
 					}
 					else{
