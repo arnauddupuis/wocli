@@ -754,10 +754,10 @@ elsif($cmd eq 'update'){
 		if(defined($installed_addon_table{$key})){
 			if($addon_table{$key}->{Version} gt $installed_addon_table{$key}->{Version}){
 				push(@update_list,$key);
-				debug_print "addon: $key added to update queue.\n";
+				debug_print "addon: $key added to update queue (REMOTE=$addon_table{$key}->{Version} LOCAL=$installed_addon_table{$key}->{Version}).\n";
 			}
 			else{
-				debug_print "addon: $key is already up to date.\n";
+				debug_print "addon: $key is already up to date (REMOTE=$addon_table{$key}->{Version} LOCAL=$installed_addon_table{$key}->{Version}).\n";
 			}
 		}
 		else{
@@ -766,6 +766,7 @@ elsif($cmd eq 'update'){
 		}
 	}
 	if(scalar(@update_list) > 0){
+		@update_list = sort @update_list;
 		print "Following addons are going to be updated:\n",join(', ',@update_list),"\nIs that ok? (y/n):";
 		my $answer = <STDIN>;
 		chomp($answer);
@@ -961,10 +962,33 @@ elsif($cmd eq 'detect'){
 		chomp($answer);
 		exit if( $answer =~ /^n/i);
 		
+		my @toc_files = split(/\n/,`2>/dev/null ls -1 '$opt_wow_dir'/Interface/AddOns/*/*.toc`);
+		my %detected_toc = ();
+		foreach my $tf (@toc_files){
+			my %toc_data = loadToc($tf);
+			if(defined($toc_data{'shortname'}) &&  exists($addon_table{$toc_data{'shortname'}})){
+				debug_print "DETECT: $toc_data{'shortname'} IS AN ADDON FOUND IN THE DATABASE.\n";
+				$detected_toc{$toc_data{'shortname'}} = {%toc_data};
+			}
+			else {
+				debug_print "DETECT: $toc_data{'shortname'} is not a root addon provided by curse.\n";
+			}
+		}
+		
 		foreach my $addonToAdd (sort @finale_addon_list){
 			print "Adding:\t$addonToAdd"." "x(50- length($addonToAdd)).":\t";
 			if($addon_table{$addonToAdd}){
 				$installed_addon_table{$addonToAdd} = $addon_table{$addonToAdd};
+				if(exists($detected_toc{$addonToAdd}) && defined($detected_toc{$addonToAdd}->{version})){
+					debug_print "Version found in local TOC file for $addonToAdd ($detected_toc{$addonToAdd}->{version})\n";
+					$installed_addon_table{$addonToAdd}->{Version} = $detected_toc{$addonToAdd}->{version};
+					print " (local version detected) ";
+				}
+				else{
+					debug_print "Version NOT found in local TOC file for $addonToAdd setting version to 0\n";
+					$installed_addon_table{$addonToAdd}->{Version} = 0;
+					print " (no version detected, update next time) ";
+				}
 				print BOLD,GREEN,"added",RESET," ($installed_addon_table{$addonToAdd}->{Name} $installed_addon_table{$addonToAdd}->{Version}).\n";
 			}
 			else{
