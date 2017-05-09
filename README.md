@@ -15,6 +15,8 @@ Please note it's work in progress. Feel free to help.
 Wocli is still under development, you can find the backlog here:
 https://github.com/arnauddupuis/wocli/issues
 
+For Windows users it works with Cygwin provided that you install Perl and the required modules (have a look at the Install section).
+
 ## Help
 
 Here is a basic help for this little program.
