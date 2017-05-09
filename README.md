@@ -45,7 +45,7 @@ install -m 0755 wocli.pl /usr/local/bin
 ln -s /usr/local/bin/wocli.pl /usr/local/bin/wocli
 ```
 
-you can then call wocli system wide (even without the .pl!):
+you can then call wocli system wide:
 ```bash
 [adupuis@localhost ~] $ wocli search aki
 speakinspell: Says random things in chat when casting any spell or ability. Type "/ss help" for the user's manual.
@@ -72,7 +72,7 @@ First, tell wocli where your World of Warcraft install is (and build the cache a
 wocli.pl --wow-dir /your/path/to\ your/wow\ --save buildcache
 ```
 
-Then you shoudl be able to install/update/add/search easily:
+Then you should be able to install/update/add/search easily:
 ```bash
 wocli.pl install bagnon titan-panel gatherer
 ```
@@ -123,6 +123,7 @@ Adding: libgroupinspect                                   :     added (LibGroupI
 You can re-run this command as many time as you like (although it might be absolutely useless, but will do no harm).
 
 IMPORTANT: As pointed out by [@khogeland](https://github.com/khogeland) in issue [#11](https://github.com/arnauddupuis/wocli/issues/11) the detect function assume all of your detected addons are up-to-date. As it is not always the case you shuld then run ```wocli reinstall```. This will reinstall all addons and optionally their dependencies.
+EDIT: This is no longer the case. In 0.7.0 version is detected, and if the version couldn't be determined, it is set to 0 so the addon is updated at the next update.
 
 ```
 [adupuis@localhost wocli]$ ./wocli reinstall
